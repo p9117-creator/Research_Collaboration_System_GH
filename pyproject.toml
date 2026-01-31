@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-collab-system"
+version = "1.0.0"
+description = "Research Collaboration System with Multi-NoSQL Backend"
+authors = [
+    {name = "Tech On", email = "techon@example.com"},
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pymongo",
+    "neo4j",
+    "redis",
+    "cassandra-driver",
+    "typer",
+    "rich",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "python-multipart"
+]
+requires-python = ">=3.9"
+
+[project.scripts]
+research-cli = "code.cli_typer:app"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=code"
+testpaths = [
+    "tests",
+]
