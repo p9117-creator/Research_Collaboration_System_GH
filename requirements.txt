@@ -1,0 +1,76 @@
+# Research Collaboration System Requirements
+# Core database drivers
+pymongo==4.6.0
+neo4j==5.15.0
+redis==5.0.1
+cassandra-driver==3.29.0
+
+# Data generation and manipulation
+faker==20.1.0
+pandas==2.1.4
+numpy==1.24.4
+
+# Web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+jinja2==3.1.2
+python-multipart==0.0.6
+flask==3.0.0
+
+# Authentication and security
+PyJWT==2.8.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+flask-login==0.6.3
+
+# HTTP client and API
+httpx==0.25.2
+requests==2.31.0
+
+# Data validation and serialization
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Logging and monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+pytest-cov==4.1.0
+httpx==0.25.2  # For testing FastAPI
+
+# Development tools
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Jupyter for data analysis (optional)
+jupyter==1.0.0
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Utility libraries
+click==8.1.7
+rich==13.7.0
+typer==0.9.0
+python-dateutil==2.8.2
+
+# Docker and deployment
+gunicorn==21.2.0
+
+# PDF Generation
+reportlab<4
+
+xhtml2pdf==0.2.11
+
+# Excel/CSV Export
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Additional utilities
+arabic-reshaper==3.0.0
+python-bidi==0.4.2
