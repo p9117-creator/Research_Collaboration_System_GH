@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}إعدادات الحساب - نظام التعاون البحثي{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-0 p-4">
+                <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-gear-fill me-2 text-primary"></i> إعدادات الأمان</h4>
+            </div>
+            <div class="card-body p-4 pt-0">
+                <p class="text-muted mb-4 border-bottom pb-3">قم بتغيير كلمة المرور الخاصة بك لتأمين حسابك بشكل أفضل.
+                </p>
+
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="current_password" class="form-label fw-semibold">كلمة المرور الحالية</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i
+                                    class="bi bi-shield-lock text-primary"></i></span>
+                            <input type="password" class="form-control bg-light border-0 py-3" id="current_password"
+                                name="current_password" required>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-50">
+
+                    <div class="mb-4">
+                        <label for="new_password" class="form-label fw-semibold">كلمة المرور الجديدة</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i
+                                    class="bi bi-key text-primary"></i></span>
+                            <input type="password" class="form-control bg-light border-0 py-3" id="new_password"
+                                name="new_password" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label fw-semibold">تأكيد كلمة المرور الجديدة</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i
+                                    class="bi bi-check2 text-primary"></i></span>
+                            <input type="password" class="form-control bg-light border-0 py-3" id="confirm_password"
+                                name="confirm_password" required>
+                        </div>
+                    </div>
+
+                    <div class="container-fluid py-4">
+                        <button type="submit" class="btn btn-primary btn-lg py-3 rounded-pill fw-bold shadow-sm">
+                            تحديث كلمة المرور <i class="bi bi-arrow-clockwise ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('profile') }}" class="text-decoration-none text-muted"><i
+                    class="bi bi-arrow-right me-2"></i> العودة للملف الشخصي</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-group-text {
+        border-radius: 12px 0 0 12px !important;
+    }
+
+    .form-control {
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    html[dir="rtl"] .input-group-text {
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    html[dir="rtl"] .form-control {
+        border-radius: 12px 0 0 12px !important;
+    }
+</style>
+{% endblock %}

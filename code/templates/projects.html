@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* تحسينات بصرية عامة */
+    :root {
+        --project-primary: #2563eb;
+        --project-secondary: #1d4ed8;
+        --bg-light: #f8f9fa;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--project-primary), var(--project-secondary));
+        color: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+        margin-bottom: 2rem;
+    }
+
+    .project-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+        padding: 1.2rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-action {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 10px;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        padding: 0.75rem 1.2rem;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+
+    .form-control:focus {
+        background-color: white;
+        border-color: var(--project-primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .stats-mini-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #f1f5f9;
+        transition: var(--transition-smooth);
+    }
+
+    .stats-mini-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div
+        class="header-gradient shadow-lg d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+        <div>
+            <h1 class="fw-black display-5 mb-2">
+                <i class="fas fa-project-diagram me-2"></i> إدارة المشاريع البحثية
+            </h1>
+            <p class="lead mb-0 opacity-75">تتبع وإدارة المبادرات البحثية والتمويل والمخرجات العلمية</p>
+        </div>
+        <div>
+            <button
+                class="btn btn-white btn-lg rounded-pill px-4 fw-bold shadow-sm hover-up border-0 text-primary bg-white"
+                data-bs-toggle="modal" data-bs-target="#addProjectModal" style="height: 56px;">
+                <i class="fas fa-plus-circle me-2"></i> البدء بمشروع جديد
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stats-mini-card d-flex align-items-center">
+                <div class="icon-box bg-primary-soft text-primary me-3">
+                    <i class="fas fa-folder-open fa-lg"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1 small fw-bold">إجمالي المشاريع</h6>
+                    <h3 class="fw-black mb-0">{{ total_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-mini-card d-flex align-items-center">
+                <div class="icon-box bg-success-soft text-success me-3">
+                    <i class="fas fa-check-double fa-lg"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1 small fw-bold">مشاريع مكتملة</h6>
+                    <h3 class="fw-black mb-0">{{ projects|selectattr('status', 'equalto', 'completed')|list|count }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card project-card shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="py-3">
+                            <th class="ps-4">عنوان المشروع</th>
+                            <th>الحالة</th>
+                            <th>الباحث الرئيسي</th>
+                            <th>تاريخ التأسيس</th>
+                            <th>التمويل</th>
+                            <th class="text-center">التحكم</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-primary">{{ project.title }}</div>
+                                <small class="text-muted d-block text-truncate" style="max-width: 250px;">{{
+                                    project.description|truncate(50) }}</small>
+                            </td>
+                            <td>
+                                {% if project.status == 'active' %}
+                                <span class="status-badge bg-success text-white"><i
+                                        class="fas fa-sync-alt fa-spin me-1"></i> نشط</span>
+                                {% elif project.status == 'completed' %}
+                                <span class="status-badge bg-primary text-white"><i
+                                        class="fas fa-check-circle me-1"></i> مكتمل</span>
+                                {% else %}
+                                <span class="status-badge bg-light text-dark border"><i class="fas fa-clock me-1"></i>
+                                    قيد التخطيط</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if project.participants and project.participants.principal_investigators %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-info-subtle text-info rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                        style="width: 32px; height: 32px; font-size: 0.7rem;">
+                                        PI
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold text-dark">{{
+                                            project.participants.principal_investigators[0].name or 'غير محدد' }}</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted italic small">لم يحدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-secondary small">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    {{ project.metadata.creation_date[:10] if project.metadata and
+                                    project.metadata.creation_date else '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold small">
+                                    {% if project.funding and (project.funding.amount or project.funding.total_budget)
+                                    %}
+                                    ${{ "{:,.0f}".format(project.funding.amount or project.funding.total_budget) }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group shadow-sm" role="group">
+                                    <a href="{{ url_for('project_detail', project_id=project._id|string) }}"
+                                        class="btn btn-sm btn-white border px-3" title="عرض التفاصيل">
+                                        <i class="fas fa-eye text-info"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-white border px-3" title="تعديل"
+                                        onclick="editProject('{{ project._id|string }}')">
+                                        <i class="fas fa-edit text-warning"></i>
+                                    </button>
+                                    <form action="{{ url_for('delete_project_route', project_id=project._id|string) }}"
+                                        method="POST" style="display:inline;"
+                                        onsubmit="return confirm('هل أنت متأكد من حذف هذا المشروع؟');">
+                                        <button type="submit" class="btn btn-sm btn-white border px-3" title="حذف">
+                                            <i class="fas fa-trash-alt text-danger"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" alt="No data"
+                                        style="width: 80px; opacity: 0.5;" class="mb-3">
+                                    <h5>لا توجد مشاريع مسجلة حالياً</h5>
+                                    <p class="small">ابدأ بإضافة أول مشروع بحثي للمنصة عبر الزر أعلاه.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 bg-light p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-signature text-primary me-2"></i>تسجيل مشروع بحثي
+                    جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/add_project" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">عنوان المشروع</label>
+                            <input type="text" name="title" class="form-control"
+                                placeholder="أدخل عنواناً جذاباً وواضحاً للمشروع" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">وصف المشروع</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                placeholder="نبذة مختصرة عن أهداف المشروع ونطاق العمل..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">الحالة الحالية</label>
+                            <select name="status" class="form-select">
+                                <option value="active">نشط (In Progress)</option>
+                                <option value="planned">مخطط له (Planned)</option>
+                                <option value="completed">مكتمل (Completed)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">الباحث الرئيسي (PI)</label>
+                            <select name="pi_id" class="form-select border-primary" id="pi_select" required>
+                                <option value="">اختر باحثاً...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">الباحثين المشاركين (Co-Investigators)</label>
+                            <select name="co_pi_ids" class="form-select" id="co_pi_select" multiple size="4">
+                            </select>
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle me-1"></i> استمر بالضغط على <strong>Ctrl</strong> (أو
+                                Command في Mac) لتحديد عدة أشخاص.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">تاريخ البدء</label>
+                            <input type="date" name="start_date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">تاريخ الانتهاء المتوقع</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm">حفظ المشروع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 bg-warning-subtle p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit text-warning me-2"></i>تعديل المشروع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProjectForm" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">عنوان المشروع</label>
+                            <input type="text" name="title" id="edit_project_title" class="form-control" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">وصف المشروع</label>
+                            <textarea name="description" id="edit_project_description" class="form-control"
+                                rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">الحالة</label>
+                            <select name="status" id="edit_project_status" class="form-select">
+                                <option value="active">نشط (In Progress)</option>
+                                <option value="planned">مخطط له (Planned)</option>
+                                <option value="completed">مكتمل (Completed)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning px-5 shadow-sm">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/researchers/list?limit=100')
+            .then(response => response.json())
+            .then(data => {
+                const piSelect = document.getElementById('pi_select');
+                const coPiSelect = document.getElementById('co_pi_select');
+
+                data.forEach(r => {
+                    const text = `${r.personal_info.first_name} ${r.personal_info.last_name} [${r.academic_profile.department_id}]`;
+
+                    const opt1 = document.createElement('option');
+                    opt1.value = r._id;
+                    opt1.text = text;
+                    piSelect.appendChild(opt1);
+
+                    const opt2 = document.createElement('option');
+                    opt2.value = r._id;
+                    opt2.text = text;
+                    coPiSelect.appendChild(opt2);
+                });
+            });
+    });
+
+    function editProject(projectId) {
+        fetch('/get_project/' + projectId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                document.getElementById('edit_project_title').value = data.title || '';
+                document.getElementById('edit_project_description').value = data.description || '';
+                document.getElementById('edit_project_status').value = data.status || 'active';
+                document.getElementById('editProjectForm').action = '/edit_project/' + projectId;
+                new bootstrap.Modal(document.getElementById('editProjectModal')).show();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Failed to load project data');
+            });
+    }
+</script>
+{% endblock %}
+{% endblock %}

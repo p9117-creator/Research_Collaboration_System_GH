@@ -1,0 +1,39 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+#
+# Type can be:
+#   feat     - A new feature
+#   fix      - A bug fix
+#   docs     - Documentation only changes
+#   style    - Code style changes (formatting, semicolons, etc)
+#   refactor - Code refactoring without changing functionality
+#   perf     - Performance improvements
+#   test     - Adding missing tests
+#   chore    - Changes to build process or auxiliary tools
+#   ci       - Changes to CI configuration files
+#
+# Scope: The part of the codebase affected (e.g., api, cli, auth, db)
+#
+# Subject: Short description (50 chars max)
+#   - Use imperative mood: "Add" not "Added"
+#   - Don't capitalize first letter
+#   - No period at the end
+#
+# Body: Detailed description (wrap at 72 chars)
+#   - Explain WHAT and WHY, not HOW
+#   - Include motivation and contrast with previous behavior
+#
+# Footer: Reference issues and breaking changes
+#   - Closes #123
+#   - BREAKING CHANGE: description
+#
+# Example:
+# feat(api): add researcher collaboration endpoint
+#
+# Add new endpoint to fetch collaboration network for researchers.
+# This enables visualization of research partnerships.
+#
+# Closes #42

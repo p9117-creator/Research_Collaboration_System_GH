@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل البحث - {{ publication.title }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --pub-primary: #1e293b;
+        --pub-secondary: #334155;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--pub-primary), var(--pub-secondary));
+        color: white;
+        padding: 3rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(30, 41, 59, 0.2);
+        margin-bottom: 3rem;
+    }
+
+    .hover-white:hover {
+        color: white !important;
+        opacity: 1 !important;
+    }
+</style>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    <div class="header-gradient shadow-lg">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('publications') }}"
+                                class="text-white-50 text-decoration-none hover-white">المنشورات</a></li>
+                        <li class="breadcrumb-item active text-white opacity-75" aria-current="page">تفاصيل البحث</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-black display-5 mb-0">تحليل الورقة البحثية</h1>
+            </div>
+            <a href="{{ url_for('publications') }}" class="btn btn-light rounded-pill px-4 shadow-sm fw-bold">
+                <i class="fas fa-chevron-right me-2 text-primary"></i> عودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-5 overflow-hidden mb-4">
+                <div class="card-header bg-white border-0 p-4 pb-0">
+                    <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill mb-3">
+                        <i class="fas fa-file-alt me-1"></i> ورقة علمية
+                    </span>
+                    <h3 class="fw-bold text-dark lh-base">{{ publication.title }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4 mb-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded-4 h-100">
+                                <label class="small text-muted d-block mb-1"><i class="fas fa-landmark me-1"></i> المجلة
+                                    / المؤتمر</label>
+                                <span class="fw-bold text-dark">
+                                    {% if publication.bibliographic_info and publication.bibliographic_info.journal %}
+                                    {{ publication.bibliographic_info.journal }}
+                                    {% else %}
+                                    غير محدد
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded-4 h-100">
+                                <label class="small text-muted d-block mb-1"><i class="fas fa-calendar-check me-1"></i>
+                                    تاريخ النشر الرسمي</label>
+                                <span class="fw-bold text-dark">
+                                    {% if publication.bibliographic_info and
+                                    publication.bibliographic_info.publication_date %}
+                                    {{ publication.bibliographic_info.publication_date }}
+                                    {% else %}
+                                    غير محدد
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <div class="publication-metrics">
+                        {% set citation_count = publication.metrics.citation_count if publication.metrics and
+                        publication.metrics.citation_count else 0 %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0">تأثير البحث (Citations)</h6>
+                            <span class="text-primary fw-black fs-4">{{ citation_count }} <small
+                                    class="fs-6 fw-normal text-muted">استشهاد</small></span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 12px; background-color: #f0f2f5;">
+                            {% set citation_percent = (citation_count / 200 * 100)|int %}
+                            <div class="progress-bar bg-gradient-primary rounded-pill shadow-sm" role="progressbar"
+                                style="width: {{ citation_percent if citation_percent <= 100 else 100 }}%"
+                                aria-valuenow="{{ citation_count }}" aria-valuemin="0" aria-valuemax="200">
+                            </div>
+                        </div>
+                        <p class="small text-muted mt-2 text-end">يمثل هذا البحث ترتيباً متقدماً في مجاله بناءً على عدد
+                            الاقتباسات.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-5 bg-primary text-white p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-quote-right fa-2x opacity-25"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <p class="mb-0 italic fw-light">تساهم هذه الدراسة في تعزيز الفهم الأكاديمي لموضوع البحث من خلال
+                            منهجية تحليلية مبتكرة تعتمد على بيانات دقيقة وموثوقة.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
+                <div class="card-header bg-white border-0 p-4 pb-2">
+                    <h5 class="fw-bold mb-0">فريق المؤلفين</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for author in publication.authors %}
+                        <a href="{{ url_for('researcher_detail', researcher_id=author.researcher_id) }}"
+                            class="list-group-item list-group-item-action border-0 p-4 d-flex align-items-center justify-content-between transition-all author-item">
+                            <div class="d-flex align-items-center">
+                                <div
+                                    class="avatar-sm bg-primary-soft text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold">
+                                    {{ author.name[0] if author.name else '?' }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ author.name or author.researcher_id }}</h6>
+                                    <small class="text-muted">باحث أكاديمي</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-primary rounded-pill fw-normal px-3">{{ author.role or
+                                'Author' }}</span>
+                        </a>
+                        {% else %}
+                        <div class="p-5 text-center text-muted">
+                            <i class="fas fa-users-slash fa-2x mb-3 opacity-25"></i>
+                            <p>لا يوجد مؤلفين مسجلين</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-5 bg-white p-4">
+                <h6 class="fw-bold mb-3 text-dark">إجراءات سريعة</h6>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('download_publication_pdf', pub_id=publication._id) }}"
+                        class="btn btn-light rounded-pill border-0 text-dark py-2 transition-all hover-shadow">
+                        <i class="fas fa-download me-2 text-primary"></i> تحميل PDF
+                    </a>
+                    <button id="shareBtn"
+                        class="btn btn-light rounded-pill border-0 text-dark py-2 transition-all hover-shadow">
+                        <i class="fas fa-share-alt me-2 text-primary"></i> مشاركة البحث
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('shareBtn').addEventListener('click', function () {
+        const title = document.title;
+        const url = window.location.href;
+
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                url: url
+            }).then(() => {
+                console.log('Thanks for sharing!');
+            }).catch(err => {
+                console.error('Could not share:', err);
+            });
+        } else {
+            // Fallback: Copy to clipboard
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('تم نسخ رابط البحث إلى الحافظة!');
+        }
+    });
+</script>
+
+
+<style>
+    /* Custom Design Elements */
+    .fw-black {
+        font-weight: 900;
+    }
+
+    .bg-primary-soft {
+        background-color: rgba(67, 97, 238, 0.1) !important;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(90deg, #4361ee, #4cc9f0);
+    }
+
+    .rounded-5 {
+        border-radius: 1.5rem !important;
+    }
+
+    .avatar-sm {
+        width: 40px;
+        height: 40px;
+    }
+
+    .author-item:hover {
+        background-color: #f8faff !important;
+        transform: scale(1.02);
+        z-index: 10;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .transition-all {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        background-color: #fff !important;
+    }
+
+    .breadcrumb-item+.breadcrumb-item::before {
+        content: "\f104";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        padding-left: 0.5rem;
+    }
+
+    /* Progress bar animation */
+    .progress-bar {
+        animation: slideIn 1.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            width: 0;
+        }
+    }
+</style>
+{% endblock %}

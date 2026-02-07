@@ -1,0 +1,77 @@
+# Research Collaboration System - Ingress Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: research-ingress
+  namespace: research-system
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - api.research-collab.example.com
+    - research-collab.example.com
+    secretName: research-tls-secret
+  rules:
+  - host: api.research-collab.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: research-api
+            port:
+              number: 8000
+  - host: research-collab.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: research-web
+            port:
+              number: 3000
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: research-api-network-policy
+  namespace: research-system
+spec:
+  podSelector:
+    matchLabels:
+      app: research-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: research-system
+    - podSelector:
+        matchLabels:
+          app: research-web
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 27017  # MongoDB
+    - protocol: TCP
+      port: 7687   # Neo4j
+    - protocol: TCP
+      port: 6379   # Redis
+    - protocol: TCP
+      port: 9042   # Cassandra

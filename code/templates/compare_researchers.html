@@ -1,0 +1,654 @@
+{% extends "base.html" %}
+
+{% block title %}مقارنة الباحثين - نظام تعاون الباحثين{% endblock %}
+
+{% block head %}
+<style>
+    .researcher-select-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .researcher-select-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .comparison-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .comparison-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        transform: rotate(30deg);
+    }
+
+    .researcher-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #1e3a8a;
+        margin: 0 auto 15px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .comparison-metric {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-bar {
+        height: 30px;
+        border-radius: 15px;
+        background: #e2e8f0;
+        overflow: hidden;
+        margin-top: 10px;
+        position: relative;
+    }
+
+    .metric-bar-fill {
+        height: 100%;
+        border-radius: 15px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .metric-bar-fill.researcher1 {
+        background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+    }
+
+    .metric-bar-fill.researcher2 {
+        background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    }
+
+    .winner-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #fbbf24;
+        color: #78350f;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .comparison-stat {
+        text-align: center;
+        padding: 15px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .vs-circle {
+        width: 60px;
+        height: 60px;
+        background: #fbbf24;
+        color: #78350f;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+        margin: 0 auto;
+        box-shadow: 0 5px 20px rgba(251, 191, 36, 0.4);
+    }
+
+    .select-researcher {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .select-researcher:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .compare-btn {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .compare-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
+    }
+
+    .radar-chart-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+
+    .researcher1-color {
+        color: #1e3a8a;
+    }
+
+    .researcher2-color {
+        color: #059669;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --compare-primary: #8b5cf6;
+        --compare-secondary: #7c3aed;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--compare-primary), var(--compare-secondary));
+        color: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.15);
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-gradient shadow-lg d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="fw-black display-5 mb-2">
+                <i class="fas fa-balance-scale me-2"></i> مقارنة أداء الباحثين
+            </h1>
+            <p class="lead mb-0 opacity-75">تحليل مقارن للإنتاج العلمي، الاقتباسات، وتطور مؤشر H-Index</p>
+        </div>
+    </div>
+
+    <!-- Researcher Selection -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="researcher-select-card">
+                <form id="compareForm" method="GET" action="{{ url_for('compare_researchers') }}">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user text-primary me-2"></i>الباحث الأول
+                            </label>
+                            <select name="researcher1" id="researcher1" class="select-researcher" required>
+                                <option value="">اختر الباحث الأول...</option>
+                                {% for researcher in researchers %}
+                                <option value="{{ researcher._id }}" {% if researcher1 and
+                                    researcher._id==researcher1._id %}selected{% endif %}>
+                                    {{ researcher.personal_info.first_name }} {{ researcher.personal_info.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-center py-3">
+                            <div class="vs-circle">VS</div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user text-success me-2"></i>الباحث الثاني
+                            </label>
+                            <select name="researcher2" id="researcher2" class="select-researcher" required>
+                                <option value="">اختر الباحث الثاني...</option>
+                                {% for researcher in researchers %}
+                                <option value="{{ researcher._id }}" {% if researcher2 and
+                                    researcher._id==researcher2._id %}selected{% endif %}>
+                                    {{ researcher.personal_info.first_name }} {{ researcher.personal_info.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="compare-btn">
+                            <i class="fas fa-chart-bar me-2"></i>مقارنة الباحثين
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if researcher1 and researcher2 %}
+    <!-- Comparison Results -->
+    <div class="row">
+        <!-- Researcher 1 Card -->
+        <div class="col-md-5">
+            <div class="comparison-card">
+                <div class="researcher-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h4 class="text-center mb-3">
+                    {{ researcher1.personal_info.first_name }} {{ researcher1.personal_info.last_name }}
+                </h4>
+                <p class="text-center mb-4 opacity-75">
+                    {{ researcher1.academic_profile.position }} - {{ researcher1.academic_profile.department_id }}
+                </p>
+                <div class="row">
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher1.collaboration_metrics.h_index|default(0) }}</div>
+                        <div class="stat-label">H-Index</div>
+                    </div>
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher1.collaboration_metrics.total_publications|default(0) }}
+                        </div>
+                        <div class="stat-label">المنشورات</div>
+                    </div>
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher1.collaboration_metrics.total_citations|default(0) }}</div>
+                        <div class="stat-label">الاستشهادات</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VS Badge -->
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <div class="vs-circle" style="width: 80px; height: 80px; font-size: 1.5rem;">VS</div>
+        </div>
+
+        <!-- Researcher 2 Card -->
+        <div class="col-md-5">
+            <div class="comparison-card" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                <div class="researcher-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h4 class="text-center mb-3">
+                    {{ researcher2.personal_info.first_name }} {{ researcher2.personal_info.last_name }}
+                </h4>
+                <p class="text-center mb-4 opacity-75">
+                    {{ researcher2.academic_profile.position }} - {{ researcher2.academic_profile.department_id }}
+                </p>
+                <div class="row">
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher2.collaboration_metrics.h_index|default(0) }}</div>
+                        <div class="stat-label">H-Index</div>
+                    </div>
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher2.collaboration_metrics.total_publications|default(0) }}
+                        </div>
+                        <div class="stat-label">المنشورات</div>
+                    </div>
+                    <div class="col-4 comparison-stat">
+                        <div class="stat-value">{{ researcher2.collaboration_metrics.total_citations|default(0) }}</div>
+                        <div class="stat-label">الاستشهادات</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Comparison -->
+    <div class="row mt-5">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>مقارنة تفصيلية</h5>
+                </div>
+                <div class="card-body">
+                    <!-- H-Index Comparison -->
+                    <div class="comparison-metric">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">H-Index</span>
+                            <span class="text-muted">
+                                <span class="researcher1-color">{{ researcher1.collaboration_metrics.h_index|default(0)
+                                    }}</span>
+                                vs
+                                <span class="researcher2-color">{{ researcher2.collaboration_metrics.h_index|default(0)
+                                    }}</span>
+                            </span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill researcher1" id="hindex-bar1"></div>
+                        </div>
+                        <div class="metric-bar mt-2">
+                            <div class="metric-bar-fill researcher2" id="hindex-bar2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Publications Comparison -->
+                    <div class="comparison-metric">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">المنشورات</span>
+                            <span class="text-muted">
+                                <span class="researcher1-color">{{
+                                    researcher1.collaboration_metrics.total_publications|default(0) }}</span>
+                                vs
+                                <span class="researcher2-color">{{
+                                    researcher2.collaboration_metrics.total_publications|default(0) }}</span>
+                            </span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill researcher1" id="pubs-bar1"></div>
+                        </div>
+                        <div class="metric-bar mt-2">
+                            <div class="metric-bar-fill researcher2" id="pubs-bar2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Citations Comparison -->
+                    <div class="comparison-metric">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">الاستشهادات</span>
+                            <span class="text-muted">
+                                <span class="researcher1-color">{{
+                                    researcher1.collaboration_metrics.total_citations|default(0) }}</span>
+                                vs
+                                <span class="researcher2-color">{{
+                                    researcher2.collaboration_metrics.total_citations|default(0) }}</span>
+                            </span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill researcher1" id="citations-bar1"></div>
+                        </div>
+                        <div class="metric-bar mt-2">
+                            <div class="metric-bar-fill researcher2" id="citations-bar2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Collaborations Comparison -->
+                    <div class="comparison-metric">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">التعاونات</span>
+                            <span class="text-muted">
+                                <span class="researcher1-color">{{
+                                    researcher1.collaboration_metrics.active_collaborations|default(0) }}</span>
+                                vs
+                                <span class="researcher2-color">{{
+                                    researcher2.collaboration_metrics.active_collaborations|default(0) }}</span>
+                            </span>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill researcher1" id="collab-bar1"></div>
+                        </div>
+                        <div class="metric-bar mt-2">
+                            <div class="metric-bar-fill researcher2" id="collab-bar2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>ملخص المقارنة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="summary-item">
+                        <span>H-Index الأعلى</span>
+                        <span class="fw-bold" id="winner-hindex"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>المنشورات الأكثر</span>
+                        <span class="fw-bold" id="winner-pubs"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>الاستشهادات الأكثر</span>
+                        <span class="fw-bold" id="winner-citations"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>التعاونات الأكثر</span>
+                        <span class="fw-bold" id="winner-collab"></span>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center mt-3">
+                        <h6 class="text-muted mb-2">الفائز الإجمالي</h6>
+                        <div class="display-6 fw-bold text-primary" id="overall-winner">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar Chart -->
+            <div class="radar-chart-container mt-4">
+                <h6 class="mb-3"><i class="fas fa-chart-area me-2 text-primary"></i>مخطط المقارنة</h6>
+                <canvas id="comparisonRadar" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('export_comparison_pdf', r1=researcher1._id, r2=researcher2._id) }}"
+            class="btn btn-primary me-2">
+            <i class="fas fa-file-pdf me-1"></i> تصدير كـ PDF
+        </a>
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> طباعة
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if researcher1 and researcher2 %}
+<script>
+    // Data for comparison
+    const comparisonData = JSON.parse('{{ comparison_data_json|safe }}');
+    const r1 = comparisonData.r1 || { name: '', hindex: 0, publications: 0, citations: 0, collaborations: 0 };
+    const r2 = comparisonData.r2 || { name: '', hindex: 0, publications: 0, citations: 0, collaborations: 0 };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        animateComparisonBars();
+        calculateWinners();
+        createRadarChart();
+    });
+
+    function animateComparisonBars() {
+        // H-Index bars
+        const maxHindex = Math.max(r1.hindex, r2.hindex) || 1;
+        document.getElementById('hindex-bar1').style.width = (r1.hindex / maxHindex * 100) + '%';
+        document.getElementById('hindex-bar1').textContent = r1.hindex;
+        document.getElementById('hindex-bar2').style.width = (r2.hindex / maxHindex * 100) + '%';
+        document.getElementById('hindex-bar2').textContent = r2.hindex;
+
+        // Publications bars
+        const maxPubs = Math.max(r1.publications, r2.publications) || 1;
+        document.getElementById('pubs-bar1').style.width = (r1.publications / maxPubs * 100) + '%';
+        document.getElementById('pubs-bar1').textContent = r1.publications;
+        document.getElementById('pubs-bar2').style.width = (r2.publications / maxPubs * 100) + '%';
+        document.getElementById('pubs-bar2').textContent = r2.publications;
+
+        // Citations bars
+        const maxCitations = Math.max(r1.citations, r2.citations) || 1;
+        document.getElementById('citations-bar1').style.width = (r1.citations / maxCitations * 100) + '%';
+        document.getElementById('citations-bar1').textContent = r1.citations;
+        document.getElementById('citations-bar2').style.width = (r2.citations / maxCitations * 100) + '%';
+        document.getElementById('citations-bar2').textContent = r2.citations;
+
+        // Collaborations bars
+        const maxCollab = Math.max(r1.collaborations, r2.collaborations) || 1;
+        document.getElementById('collab-bar1').style.width = (r1.collaborations / maxCollab * 100) + '%';
+        document.getElementById('collab-bar1').textContent = r1.collaborations;
+        document.getElementById('collab-bar2').style.width = (r2.collaborations / maxCollab * 100) + '%';
+        document.getElementById('collab-bar2').textContent = r2.collaborations;
+    }
+
+    function calculateWinners() {
+        let r1Wins = 0, r2Wins = 0;
+
+        // H-Index winner
+        if (r1.hindex > r2.hindex) {
+            document.getElementById('winner-hindex').innerHTML = `<span class="researcher1-color">${r1.name}</span>`;
+            r1Wins++;
+        } else if (r2.hindex > r1.hindex) {
+            document.getElementById('winner-hindex').innerHTML = `<span class="researcher2-color">${r2.name}</span>`;
+            r2Wins++;
+        } else {
+            document.getElementById('winner-hindex').textContent = 'تعادل';
+        }
+
+        // Publications winner
+        if (r1.publications > r2.publications) {
+            document.getElementById('winner-pubs').innerHTML = `<span class="researcher1-color">${r1.name}</span>`;
+            r1Wins++;
+        } else if (r2.publications > r1.publications) {
+            document.getElementById('winner-pubs').innerHTML = `<span class="researcher2-color">${r2.name}</span>`;
+            r2Wins++;
+        } else {
+            document.getElementById('winner-pubs').textContent = 'تعادل';
+        }
+
+        // Citations winner
+        if (r1.citations > r2.citations) {
+            document.getElementById('winner-citations').innerHTML = `<span class="researcher1-color">${r1.name}</span>`;
+            r1Wins++;
+        } else if (r2.citations > r1.citations) {
+            document.getElementById('winner-citations').innerHTML = `<span class="researcher2-color">${r2.name}</span>`;
+            r2Wins++;
+        } else {
+            document.getElementById('winner-citations').textContent = 'تعادل';
+        }
+
+        // Collaborations winner
+        if (r1.collaborations > r2.collaborations) {
+            document.getElementById('winner-collab').innerHTML = `<span class="researcher1-color">${r1.name}</span>`;
+            r1Wins++;
+        } else if (r2.collaborations > r1.collaborations) {
+            document.getElementById('winner-collab').innerHTML = `<span class="researcher2-color">${r2.name}</span>`;
+            r2Wins++;
+        } else {
+            document.getElementById('winner-collab').textContent = 'تعادل';
+        }
+
+        // Overall winner
+        const overallWinner = document.getElementById('overall-winner');
+        if (r1Wins > r2Wins) {
+            overallWinner.innerHTML = `<span class="researcher1-color">${r1.name}</span>`;
+        } else if (r2Wins > r1Wins) {
+            overallWinner.innerHTML = `<span class="researcher2-color">${r2.name}</span>`;
+        } else {
+            overallWinner.textContent = 'تعادل';
+        }
+    }
+
+    function createRadarChart() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded');
+            return;
+        }
+        const canvas = document.getElementById('comparisonRadar');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        const maxVals = {
+            hindex: Math.max(r1.hindex, r2.hindex) || 1,
+            publications: Math.max(r1.publications, r2.publications) || 1,
+            citations: Math.max(r1.citations, r2.citations) || 1,
+            collaborations: Math.max(r1.collaborations, r2.collaborations) || 1
+        };
+
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['H-Index', 'المنشورات', 'الاستشهادات', 'التعاونات'],
+                datasets: [{
+                    label: r1.name,
+                    data: [
+                        (r1.hindex / maxVals.hindex) * 100,
+                        (r1.publications / maxVals.publications) * 100,
+                        (r1.citations / maxVals.citations) * 100,
+                        (r1.collaborations / maxVals.collaborations) * 100
+                    ],
+                    backgroundColor: 'rgba(30, 58, 138, 0.2)',
+                    borderColor: '#1e3a8a',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1e3a8a'
+                }, {
+                    label: r2.name,
+                    data: [
+                        (r2.hindex / maxVals.hindex) * 100,
+                        (r2.publications / maxVals.publications) * 100,
+                        (r2.citations / maxVals.citations) * 100,
+                        (r2.collaborations / maxVals.collaborations) * 100
+                    ],
+                    backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                    borderColor: '#059669',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#059669'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

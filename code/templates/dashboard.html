@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - نظام تعاون الأبحاث{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --dash-primary: #1e293b;
+        --dash-secondary: #334155;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--dash-primary), var(--dash-secondary));
+        color: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(30, 41, 59, 0.15);
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div
+        class="header-gradient shadow-lg d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+        <div>
+            <h1 class="fw-black display-5 mb-2">
+                <i class="fas fa-chart-line me-2"></i> لوحة التحكم الذكية
+            </h1>
+            <p class="lead mb-0 opacity-75">نظرة عامة على نشاطات البحث العلمي وأداء الأقسام الأكاديمية</p>
+        </div>
+        <div>
+            <div class="last-updated-badge shadow-sm border rounded-pill d-inline-block bg-white px-4 py-3">
+                <small class="text-muted fw-bold">
+                    <i class="fas fa-sync-alt text-primary me-2"></i> آخر تحديث:
+                    <span class="text-dark">{{ overview.last_updated }}</span>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    {% if overview.error %}
+    <div class="alert alert-danger border-0 shadow-sm rounded-4 animate__animated animate__shakeX">
+        <i class="fas fa-exclamation-triangle me-2"></i> <strong>خطأ في مزامنة البيانات:</strong> {{ overview.error }}
+    </div>
+    {% else %}
+
+    <div class="row g-4 mb-4">
+        {% set metrics = [
+        {'label': 'إجمالي الباحثين', 'value': overview.total_researchers, 'icon': 'fa-user-graduate', 'color':
+        'primary'},
+        {'label': 'المشاريع القائمة', 'value': overview.total_projects, 'icon': 'fa-project-diagram', 'color':
+        'indigo'},
+        {'label': 'الإنتاج العلمي', 'value': overview.total_publications, 'icon': 'fa-file-signature', 'color': 'info'},
+        {'label': 'منشورات حديثة', 'value': overview.recent_activity.recent_publications, 'icon': 'fa-bolt', 'color':
+        'warning'}
+        ] %}
+        {% for metric in metrics %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 metric-card overflow-hidden position-relative">
+                <div class="card-body p-4 position-relative z-index-1">
+                    <div class="d-flex align-items-center mb-3">
+                        <div
+                            class="icon-shape-sm bg-{{ metric.color }}-soft text-{{ metric.color }} rounded-circle me-3">
+                            <i class="fas {{ metric.icon }}"></i>
+                        </div>
+                        <h6 class="text-muted fw-bold mb-0 small">{{ metric.label }}</h6>
+                    </div>
+                    <h2 class="fw-black mb-0 display-6">{{ metric.value }}</h2>
+                </div>
+                <div class="position-absolute bottom-0 end-0 p-3 opacity-10">
+                    <i class="fas {{ metric.icon }} fa-4x"></i>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">الأداء حسب القسم الأكاديمي</h5>
+                    <i class="fas fa-ellipsis-h text-muted"></i>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3 border-0">القسم</th>
+                                    <th class="text-center py-3 border-0">عدد الباحثين</th>
+                                    <th class="text-center py-3 border-0">متوسط H-Index</th>
+                                    <th class="text-end pe-4 py-3 border-0">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept_id, stats in overview.department_statistics.items() %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <span class="dept-indicator me-2"></span>
+                                            <span class="fw-bold">
+                                                {% if dept_id == 'dept_cs' %}علوم الحاسوب
+                                                {% elif dept_id == 'dept_bio' %}علم الأحياء
+                                                {% elif dept_id == 'dept_chem' %}الكيمياء
+                                                {% elif dept_id == 'dept_math' %}الرياضيات
+                                                {% elif dept_id == 'dept_physics' %}الفيزياء
+                                                {% else %}{{ dept_id }}{% endif %}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center"><span
+                                            class="badge rounded-pill bg-light text-dark fw-normal px-3">{{
+                                            stats.researcher_count }}</span></td>
+                                    <td class="text-center">
+                                        <span class="text-primary fw-black">{{ "%.1f"|format(stats.avg_h_index)
+                                            }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="badge bg-success-soft text-success px-3">نشط <i
+                                                class="fas fa-check-circle ms-1"></i></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">آخر الإنتاجات العلمية</h5>
+                    <a href="{{ url_for('publications') }}" class="btn btn-sm btn-light rounded-pill px-3">الكل</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="publication-list">
+                        {% if recent_publications %}
+                        {% for pub in recent_publications %}
+                        <div class="p-4 border-bottom publication-item transition-all">
+                            <h6 class="fw-bold mb-2">
+                                <a href="{{ url_for('publication_detail', pub_id=pub.id) }}"
+                                    class="text-dark text-decoration-none hover-link">
+                                    {{ pub.title[:65] }}{% if pub.title|length > 65 %}...{% endif %}
+                                </a>
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-3 small text-muted">
+                                    <span><i class="far fa-calendar-alt me-1"></i> {{ pub.publication_date }}</span>
+                                    <span><i class="far fa-star text-warning me-1"></i> {{ pub.citation_count }}</span>
+                                </div>
+                                <span class="badge bg-primary-soft text-primary rounded-pill small">Journal</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="p-5 text-center">
+                            <i class="fas fa-file-invoice fa-3x text-light mb-3"></i>
+                            <p class="text-muted">لا توجد منشورات حديثة لعرضها</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <style>
+        /* Dashboard Variables & Styles */
+        :root {
+            --indigo: #6610f2;
+        }
+
+        .fw-black {
+            font-weight: 900;
+        }
+
+        .bg-indigo-soft {
+            background-color: rgba(102, 16, 242, 0.1);
+            color: var(--indigo);
+        }
+
+        .bg-primary-soft {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+
+        .bg-success-soft {
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+
+        .bg-warning-soft {
+            background-color: rgba(241, 196, 15, 0.1);
+        }
+
+        .metric-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.02) !important;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .icon-shape-sm {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dept-indicator {
+            width: 4px;
+            height: 15px;
+            background-color: var(--primary);
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .publication-item:hover {
+            background-color: #fcfdfe;
+        }
+
+        .hover-link:hover {
+            color: var(--primary) !important;
+        }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        /* Custom Scrollbar for list */
+        .publication-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+    </style>
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+        // كود بسيط لعمل تأثير عدّاد الأرقام (Count Up) للقيم
+        document.addEventListener('DOMContentLoaded', () => {
+            const counters = document.querySelectorAll('.count-up');
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target');
+                    const count = +counter.innerText;
+                    const speed = 200;
+                    const inc = target / speed;
+
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 1);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                // updateCount(); // يمكن تفعيله بإضافة data-target للأرقام
+            });
+        });
+    </script>
+    {% endblock %}
