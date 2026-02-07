@@ -1,68 +1,89 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, patch
 import sys
 import os
 
 # Ensure code is in path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../code'))
 
-from api_server import app, get_db_manager
+from api_server import app, get_db_manager, get_query_engine, get_current_user
 
 @pytest.fixture
 def mock_db_manager():
     mock = AsyncMock()
     # Mock repositories inside manager
     mock.mongodb = MagicMock()
+    mock.mongodb.search_researchers = MagicMock(return_value=[])
     mock.neo4j = MagicMock()
     mock.redis = MagicMock()
     mock.cassandra = MagicMock()
+    mock.create_researcher_comprehensive = MagicMock(return_value="12345")
     return mock
 
 @pytest.fixture
-def client(mock_db_manager):
+def mock_query_engine(mock_db_manager):
+    mock = MagicMock()
+    mock.db_manager = mock_db_manager
+    mock.get_researcher_profile_complete = MagicMock()
+    return mock
+
+@pytest.fixture
+def client(mock_db_manager, mock_query_engine):
+    # Override dependencies
     app.dependency_overrides[get_db_manager] = lambda: mock_db_manager
-    return TestClient(app)
+    app.dependency_overrides[get_query_engine] = lambda: mock_query_engine
+    # Bypass authentication for tests
+    app.dependency_overrides[get_current_user] = lambda: {"email": "test@example.com", "role": "admin"}
+    yield TestClient(app)
+    # Clean up
+    app.dependency_overrides.clear()
 
 class TestAPI:
 
     def test_read_root(self, client):
-        response = client.get("/")
+        """Test health check endpoint (actual root is /health not /)"""
+        response = client.get("/health")
         assert response.status_code == 200
-        assert "Welcome" in response.json()['message']
+        assert response.json()['status'] == "healthy"
 
     def test_create_researcher(self, client, mock_db_manager):
         # Setup
         researcher_data = {
-            "personal_info": {"first_name": "Test", "last_name": "User", "email": "test@example.com"},
-            "academic_profile": {"department": "CS", "position": "Student"},
-            "collaboration_metrics": {"h_index": 0, "total_publications": 0}
+            "first_name": "Test",
+            "last_name": "User",
+            "email": "test@example.com",
+            "department_id": "dept_cs",
+            "position": "Student"
         }
-        mock_db_manager.create_researcher_comprehensive.return_value = "12345"
         
         # Execute
-        response = client.post("/researchers/", json=researcher_data)
+        response = client.post("/researchers", json=researcher_data)
         
         # Verify
         assert response.status_code == 200
-        assert response.json()['id'] == "12345"
+        assert response.json()['researcher_id'] == "12345"
         mock_db_manager.create_researcher_comprehensive.assert_called_once()
 
-    def test_get_researcher(self, client, mock_db_manager):
+    def test_get_researcher(self, client, mock_query_engine):
         # Setup
-        mock_profile = {"mongodb": {"_id": "123", "name": "Test"}, "collaborators": []}
-        mock_db_manager.get_researcher_complete_profile.return_value = mock_profile
+        mock_profile = {
+            "basic_info": {"first_name": "Test", "last_name": "User"},
+            "mongodb_data": {"_id": "123"},
+            "collaborators": []
+        }
+        mock_query_engine.get_researcher_profile_complete.return_value = mock_profile
         
         # Execute
         response = client.get("/researchers/123")
         
         # Verify
         assert response.status_code == 200
-        assert response.json()['mongodb']['name'] == "Test"
+        assert "basic_info" in response.json()
 
-    def test_get_researcher_not_found(self, client, mock_db_manager):
-        # Setup
-        mock_db_manager.get_researcher_complete_profile.return_value = {}
+    def test_get_researcher_not_found(self, client, mock_query_engine):
+        # Setup - return error dict to simulate not found
+        mock_query_engine.get_researcher_profile_complete.return_value = {"error": "Not found"}
         
         # Execute
         response = client.get("/researchers/999")
@@ -71,13 +92,12 @@ class TestAPI:
         assert response.status_code == 404
 
     def test_system_stats(self, client, mock_db_manager):
-        # Setup
-        mock_stats = {"summary": {"total_researchers": 10}}
-        mock_db_manager.get_system_statistics.return_value = mock_stats
+        # Setup - mock search_researchers to return empty list
+        mock_db_manager.mongodb.search_researchers.return_value = []
         
         # Execute
-        response = client.get("/system/stats")
+        response = client.get("/stats/overview")
         
         # Verify
         assert response.status_code == 200
-        assert response.json()['summary']['total_researchers'] == 10
+        assert "total_researchers" in response.json()

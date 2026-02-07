@@ -27,7 +27,11 @@ class TestNeo4jRepository:
         # Setup
         researcher_data = {
             "_id": "123",
-            "personal_info": {"first_name": "Taha", "last_name": "Hussein"},
+            "personal_info": {
+                "first_name": "Taha",
+                "last_name": "Hussein",
+                "email": "taha.hussein@example.com"  # Added missing email field
+            },
             "academic_profile": {"department_id": "DEP1", "position": "Professor"},
             "collaboration_metrics": {"h_index": 10, "total_publications": 50},
             "orcid_id": "0000-0000"
@@ -35,7 +39,7 @@ class TestNeo4jRepository:
         
         session_mock = neo4j_repo.driver.session.return_value.__enter__.return_value
         
-        # Execute
+        #Execute
         success = neo4j_repo.create_researcher_node(researcher_data)
         
         # Verify
