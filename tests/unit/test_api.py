@@ -82,8 +82,9 @@ class TestAPI:
         assert "basic_info" in response.json()
 
     def test_get_researcher_not_found(self, client, mock_query_engine):
-        # Setup - return error dict to simulate not found
-        mock_query_engine.get_researcher_profile_complete.return_value = {"error": "Not found"}
+        # Setup - make query_engine return error to trigger 404
+        from fastapi import HTTPException
+        mock_query_engine.get_researcher_profile_complete.return_value = {"error": "Researcher not found"}
         
         # Execute
         response = client.get("/researchers/999")
