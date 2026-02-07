@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}الملف الشخصي - نظام التعاون البحثي{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="bg-primary bg-gradient p-5 text-center text-white position-relative">
+                <div class="mb-3">
+                    <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow"
+                        style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-bounding-box fs-1"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-1">{{ current_user.full_name }}</h2>
+                <p class="opacity-75 mb-0">{{ current_user.email }}</p>
+                <div class="badge bg-white text-primary mt-2 rounded-pill px-3">{{ current_user.role | capitalize }}
+                </div>
+            </div>
+
+            <div class="card-body p-5">
+                <h4 class="fw-bold mb-4"><i class="bi bi-info-circle me-2 text-primary"></i> المعلومات الأساسية</h4>
+
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label fw-semibold">الاسم الكامل</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i
+                                        class="bi bi-person text-primary"></i></span>
+                                <input type="text" class="form-control bg-light border-0 py-3" id="full_name"
+                                    name="full_name" value="{{ current_user.full_name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-semibold">البريد الإلكتروني</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i
+                                        class="bi bi-envelope text-primary"></i></span>
+                                <input type="email" class="form-control bg-light border-0 py-3" id="email" name="email"
+                                    value="{{ current_user.email }}" required>
+                            </div>
+                        </div>
+
+                        <div class="container-fluid py-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                                حفظ التغييرات <i class="bi bi-check2-circle ms-2"></i>
+                            </button>
+                            <a href="{{ url_for('dashboard') }}"
+                                class="btn btn-light btn-lg px-4 rounded-pill ms-2">إلغاء</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4 rounded-4">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="fw-bold mb-1">الأمان وكلمة المرور</h5>
+                    <p class="text-muted mb-0 small">تريد تحديث كلمة المرور الخاصة بك؟</p>
+                </div>
+                <a href="{{ url_for('settings') }}" class="btn btn-outline-primary rounded-pill px-4">انتقل
+                    للإعدادات</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-group-text {
+        border-radius: 12px 0 0 12px !important;
+    }
+
+    .form-control {
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    html[dir="rtl"] .input-group-text {
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    html[dir="rtl"] .form-control {
+        border-radius: 12px 0 0 12px !important;
+    }
+</style>
+{% endblock %}

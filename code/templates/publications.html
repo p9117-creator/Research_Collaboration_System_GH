@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}المستودع البحثي - نظام تعاون الأبحاث{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+
+    <style>
+        :root {
+            --pub-primary: #3b82f6;
+            --pub-secondary: #2563eb;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, var(--pub-primary), var(--pub-secondary));
+            color: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+            margin-bottom: 2rem;
+        }
+    </style>
+
+    <div class="container-fluid py-4 animate__animated animate__fadeIn">
+        <div
+            class="header-gradient shadow-lg d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+            <div>
+                <h1 class="fw-black display-5 mb-2">المستودع البحثي الموحد</h1>
+                <p class="lead mb-0 opacity-75">نظام إدارة وتوثيق النتاج العلمي والمنشورات الأكاديمية والمقالات العلمية
+                </p>
+            </div>
+            <div>
+                <button
+                    class="btn btn-white btn-lg rounded-pill px-4 fw-bold shadow-sm hover-up border-0 text-primary bg-white"
+                    data-bs-toggle="modal" data-bs-target="#addPubModal" style="height: 56px;">
+                    <i class="fas fa-plus-circle me-2"></i> توثيق عمل جديد
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="search-box position-relative">
+                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" id="tableSearch"
+                        class="form-control form-control-lg ps-5 rounded-4 border-0 shadow-sm"
+                        placeholder="بحث عن عنوان بحث، مجلة، أو مؤلف...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select form-select-lg rounded-4 border-0 shadow-sm text-muted" id="filterType">
+                    <option value="">كل أنواع النشر</option>
+                    <option value="journal">مقالات علمية</option>
+                    <option value="conference">أوراق مؤتمرات</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 custom-pub-table">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-3 text-uppercase small fw-bold">تفاصيل المنشور</th>
+                                <th class="py-3 text-uppercase small fw-bold">التصنيف والوعاء</th>
+                                <th class="py-3 text-uppercase small fw-bold text-center">السنة</th>
+                                <th class="py-3 text-uppercase small fw-bold text-center">التأثير (Citations)</th>
+                                <th class="pe-4 py-3 text-uppercase small fw-bold text-end">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pubTableBody">
+                            {% for pub in publications %}
+                            <tr class="pub-row">
+                                <td class="ps-4 py-4" style="min-width: 400px;">
+                                    <div class="d-flex align-items-start">
+                                        <div class="pub-icon-wrapper me-3 d-none d-md-flex">
+                                            <i class="fas fa-file-alt text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('publication_detail', pub_id=pub._id) }}"
+                                                class="pub-link-title mb-1 d-block">{{ pub.title }}</a>
+                                            <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                                                <span class="small text-muted"><i class="fas fa-id-card-alt me-1"></i>
+                                                    DOI:
+                                                    10.1101/{{ range(1000, 9999)|random }}</span>
+                                                <span class="dot-separator"></span>
+                                                <span class="small text-muted"><i class="fas fa-users me-1"></i> {{
+                                                    pub.authors|length }} مؤلفين</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge mb-2 d-block w-fit 
+                                    {% if 'journal' in pub.publication_type %}bg-primary-soft text-primary
+                                    {% elif 'conference' in pub.publication_type %}bg-info-soft text-info
+                                    {% else %}bg-warning-soft text-warning{% endif %} rounded-pill px-3">
+                                        {{ pub.publication_type|replace('_', ' ')|title }}
+                                    </span>
+                                    <span class="small text-dark fw-medium d-block">
+                                        <i class="fas fa-print me-1 opacity-50"></i> {{ pub.bibliographic_info.journal
+                                        if
+                                        pub.bibliographic_info else 'Non-indexed' }}
+                                    </span>
+                                </td>
+                                <td class="text-center fw-bold">
+                                    <span class="badge bg-light text-dark rounded-4 px-3 py-2">
+                                        {{ pub.bibliographic_info.publication_date[:4] if pub.bibliographic_info and
+                                        pub.bibliographic_info.publication_date else '-' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="citation-badge">
+                                        <span class="count">{{ pub.metrics.citation_count if pub.metrics else 0
+                                            }}</span>
+                                        <span class="label">اقتباس</span>
+                                    </div>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('publication_detail', pub_id=pub._id) }}"
+                                            class="btn btn-sm btn-light rounded-start-3 border-0 shadow-sm"
+                                            data-bs-toggle="tooltip" title="عرض التفاصيل">
+                                            <i class="fas fa-eye text-primary"></i>
+                                        </a>
+                                        <button type="button"
+                                            class="btn btn-sm btn-light border-0 shadow-sm edit-pub-btn"
+                                            data-pub-id="{{ pub._id }}" data-pub-title="{{ pub.title }}"
+                                            data-bs-toggle="modal" data-bs-target="#editPubModal" title="تعديل">
+                                            <i class="fas fa-edit text-warning"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-light rounded-end-3 border-0 shadow-sm delete-pub-btn"
+                                            data-pub-id="{{ pub._id }}" data-pub-title="{{ pub.title }}"
+                                            data-bs-toggle="modal" data-bs-target="#deletePubModal" title="حذف">
+                                            <i class="fas fa-trash-alt text-danger"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Empty"
+                                            style="width: 80px;" class="mb-3 opacity-25">
+                                        <h5 class="text-muted fw-bold">لا توجد أبحاث منشورة حالياً</h5>
+                                        <p class="small text-muted">ابدأ بإضافة أول منشور علمي عبر الزر في الأعلى</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addPubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-5">
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h5 class="modal-title fw-bold fs-4"><i class="fas fa-pen-nib text-primary me-2"></i> توثيق عمل جديد
+                    </h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form action="/add_publication" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">العنوان الكامل للبحث</label>
+                                <textarea name="title" class="form-control rounded-4 border-light bg-light py-3"
+                                    rows="2" placeholder="أدخل العنوان الرسمي كما هو منشور..." required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">نوع النشر</label>
+                                <select name="type" class="form-select rounded-4 border-light bg-light py-2">
+                                    <option value="journal_article">Journal Article (مقالة علمية)</option>
+                                    <option value="conference_paper">Conference Paper (ورقة مؤتمر)</option>
+                                    <option value="book_chapter">Book Chapter (فصل في كتاب)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">سنة النشر</label>
+                                <input type="number" name="year"
+                                    class="form-control rounded-4 border-light bg-light py-2" value="2025">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">المجلة أو الوعاء الناشر</label>
+                                <input type="text" name="journal"
+                                    class="form-control rounded-4 border-light bg-light py-2"
+                                    placeholder="IEEE, Nature, Springer...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase text-primary">ربط المؤلفين
+                                    المشاركين
+                                    (اختيار من النظام)</label>
+                                <select name="author_ids" id="author_select"
+                                    class="form-select rounded-4 border-primary-subtle bg-primary-soft py-2" multiple
+                                    style="height: 120px;"></select>
+                                <div class="alert alert-info border-0 rounded-4 mt-2 py-2 d-flex align-items-center">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <span class="small">استخدم Ctrl/Cmd لاختيار عدة زملاء شاركوا في هذا العمل.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+                            data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow">حفظ في
+                            المستودع</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Publication Modal -->
+    <div class="modal fade" id="editPubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-5">
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h5 class="modal-title fw-bold fs-4"><i class="fas fa-edit text-warning me-2"></i> تعديل بيانات
+                        المنشور
+                    </h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="editPubForm" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">العنوان الكامل للبحث</label>
+                                <textarea name="title" id="edit_title"
+                                    class="form-control rounded-4 border-light bg-light py-3" rows="2"
+                                    required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">نوع النشر</label>
+                                <select name="type" id="edit_type"
+                                    class="form-select rounded-4 border-light bg-light py-2">
+                                    <option value="journal_article">Journal Article (مقالة علمية)</option>
+                                    <option value="conference_paper">Conference Paper (ورقة مؤتمر)</option>
+                                    <option value="book_chapter">Book Chapter (فصل في كتاب)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">سنة النشر</label>
+                                <input type="number" name="year" id="edit_year"
+                                    class="form-control rounded-4 border-light bg-light py-2">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">المجلة أو الوعاء الناشر</label>
+                                <input type="text" name="journal" id="edit_journal"
+                                    class="form-control rounded-4 border-light bg-light py-2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+                            data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold shadow text-white">حفظ
+                            التغييرات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Publication Modal -->
+    <div class="modal fade" id="deletePubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-5">
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h5 class="modal-title fw-bold fs-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>
+                        تأكيد
+                        الحذف</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-0">هل أنت متأكد من رغبتك في حذف هذا المنشور؟ لا يمكن التراجع عن هذا الإجراء.</p>
+                    <p class="fw-bold mt-2" id="delete_pub_title"></p>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+                        data-bs-dismiss="modal">إلغاء</button>
+                    <form id="deletePubForm" method="POST">
+                        <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow">حذف نهائي</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Styling Enhancements */
+        .bg-primary {
+            background: linear-gradient(135deg, #4361ee 0%, #4cc9f0 100%) !important;
+        }
+
+        .btn-white {
+            background: white;
+            color: #4361ee;
+            border: none;
+        }
+
+        .header-shape {
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .w-fit {
+            width: fit-content;
+        }
+
+        .rounded-5 {
+            border-radius: 1.5rem !important;
+        }
+
+        .pub-link-title {
+            color: #2d3436;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .pub-link-title:hover {
+            color: #4361ee;
+        }
+
+        .pub-icon-wrapper {
+            width: 45px;
+            height: 45px;
+            background: #f0f3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .dot-separator {
+            width: 4px;
+            height: 4px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+
+        /* Citation Badge */
+        .citation-badge {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 12px;
+            padding: 5px 15px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .citation-badge .count {
+            color: #e53e3e;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .citation-badge .label {
+            font-size: 0.65rem;
+            color: #e53e3e;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* Soft Badges */
+        .bg-primary-soft {
+            background-color: rgba(67, 97, 238, 0.1) !important;
+            color: #4361ee;
+        }
+
+        .bg-info-soft {
+            background-color: rgba(76, 201, 240, 0.1) !important;
+            color: #4cc9f0;
+        }
+
+        .bg-warning-soft {
+            background-color: rgba(247, 181, 0, 0.1) !important;
+            color: #f7b500;
+        }
+
+        /* Hover Animation */
+        .pub-row {
+            transition: all 0.3s ease;
+        }
+
+        .pub-row:hover {
+            background-color: #f8faff !important;
+            transform: scale(1.002);
+        }
+
+        .hover-up:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
+
+    {% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch researchers for the select dropdown
+            fetch('/api/researchers/list?limit=100')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('author_select');
+                    data.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r._id;
+                        opt.className = "py-2 px-3 border-bottom border-light";
+                        opt.text = `👤 ${r.personal_info.first_name} ${r.personal_info.last_name}`;
+                        select.appendChild(opt);
+                    });
+                });
+
+            // Simple Search Filter Functionality
+            const searchInput = document.getElementById('tableSearch');
+            const filterType = document.getElementById('filterType');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const typeTerm = filterType.value.toLowerCase();
+                const rows = document.querySelectorAll('.pub-row');
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    const matchesSearch = text.includes(searchTerm);
+                    const matchesType = typeTerm === "" || text.includes(typeTerm);
+
+                    row.style.display = (matchesSearch && matchesType) ? "" : "none";
+                });
+            }
+
+            searchInput.addEventListener('keyup', filterTable);
+            filterType.addEventListener('change', filterTable);
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
+            // Edit Publication Logic
+            const editButtons = document.querySelectorAll('.edit-pub-btn');
+            const editForm = document.getElementById('editPubForm');
+
+            editButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const pubId = this.getAttribute('data-pub-id');
+
+                    // Fetch publication details
+                    fetch(`/get_publication/${pubId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('edit_title').value = data.title;
+                            document.getElementById('edit_type').value = data.publication_type || 'journal_article';
+
+                            if (data.bibliographic_info) {
+                                if (data.bibliographic_info.publication_date) {
+                                    document.getElementById('edit_year').value = data.bibliographic_info.publication_date.substring(0, 4);
+                                }
+                                document.getElementById('edit_journal').value = data.bibliographic_info.journal || '';
+                            }
+
+                            // Set form action
+                            editForm.action = `/edit_publication/${pubId}`;
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+            });
+
+            // Delete Publication Logic
+            const deleteButtons = document.querySelectorAll('.delete-pub-btn');
+            const deleteForm = document.getElementById('deletePubForm');
+            const deleteTitle = document.getElementById('delete_pub_title');
+
+            deleteButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const pubId = this.getAttribute('data-pub-id');
+                    const pubTitle = this.getAttribute('data-pub-title');
+
+                    deleteTitle.textContent = pubTitle;
+                    deleteForm.action = `/delete_publication/${pubId}`;
+                });
+            });
+        });
+    </script>
+    {% endblock %}
+    {% endblock %}

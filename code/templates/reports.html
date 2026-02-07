@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير والتصدير - نظام تعاون الباحثين{% endblock %}
+
+{% block head %}
+<style>
+    .report-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        height: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--card-color-start), var(--card-color-end));
+    }
+
+    .report-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin-bottom: 20px;
+    }
+
+    .report-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+    }
+
+    .report-desc {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .export-format {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 2px solid #e2e8f0;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #475569;
+    }
+
+    .export-format:hover {
+        background: #1e3a8a;
+        color: white;
+        border-color: #1e3a8a;
+    }
+
+    .export-format.pdf {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+    .export-format.pdf:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+    .export-format.csv {
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .export-format.csv:hover {
+        background: #10b981;
+        color: white;
+    }
+
+    .export-format.json {
+        border-color: #f59e0b;
+        color: #f59e0b;
+    }
+
+    .export-format.json:hover {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    }
+
+    .quick-stats {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1e3a8a;
+    }
+
+    .custom-report-builder {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 30px;
+        margin-top: 40px;
+    }
+
+    .checkbox-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        background: white;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox-option:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .checkbox-option input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #3b82f6;
+    }
+
+    .generate-btn {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .generate-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
+    }
+
+    .recent-exports {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .export-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s ease;
+    }
+
+    .export-item:hover {
+        background: #f8fafc;
+    }
+
+    .export-item:last-child {
+        border-bottom: none;
+    }
+
+    .file-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .file-icon.pdf {
+        background: #ef4444;
+    }
+
+    .file-icon.csv {
+        background: #10b981;
+    }
+
+    .file-icon.json {
+        background: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --reports-primary: #f43f5e;
+        --reports-secondary: #e11d48;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--reports-primary), var(--reports-secondary));
+        color: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(244, 63, 94, 0.15);
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-gradient shadow-lg d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-black display-5 mb-2">
+                <i class="fas fa-file-pdf me-2"></i> مركز التقارير والأدلة
+            </h1>
+            <p class="lead mb-0 opacity-75">توليد وتصدير التقارير البحثية، الإحصائيات، وسير الباحثين الذاتية</p>
+        </div>
+        <div class="col-md-auto">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="quick-stats border-0 shadow-sm">
+                        <div class="stat-number text-primary">{{ stats.researchers or 0 }}</div>
+                        <div class="text-muted small">باحث</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="quick-stats border-0 shadow-sm">
+                        <div class="stat-number text-danger">{{ stats.publications or 0 }}</div>
+                        <div class="text-muted small">منشور</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Reports -->
+    <h4 class="mb-4"><i class="fas fa-bolt me-2 text-warning"></i>تقارير سريعة</h4>
+
+    <div class="row g-4 mb-5">
+        <!-- System Overview Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #1e3a8a; --card-color-end: #3b82f6;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h5 class="report-title">تقرير النظام الشامل</h5>
+                <p class="report-desc">تقرير كامل يتضمن إحصائيات النظام، الباحثين الأوائل، وحالة قواعد البيانات</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='system_overview') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Researchers Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #059669; --card-color-end: #10b981;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h5 class="report-title">تقرير الباحثين</h5>
+                <p class="report-desc">قائمة شاملة بجميع الباحثين مع معلوماتهم ومقاييسهم الأكاديمية</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='researchers') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='researchers', format='csv') }}"
+                        class="export-format csv">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='researchers', format='json') }}"
+                        class="export-format json">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #7c3aed; --card-color-end: #a78bfa;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h5 class="report-title">تقرير المشاريع</h5>
+                <p class="report-desc">جميع المشاريع البحثية مع تفاصيلها وحالتها وأعضاء الفريق</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='projects') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='projects', format='csv') }}"
+                        class="export-format csv">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='projects', format='json') }}"
+                        class="export-format json">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Publications Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #ea580c; --card-color-end: #fb923c;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h5 class="report-title">تقرير المنشورات</h5>
+                <p class="report-desc">جميع المنشورات العلمية مع معلومات النشر والاستشهادات</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='publications') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='publications', format='csv') }}"
+                        class="export-format csv">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('export_data', data_type='publications', format='json') }}"
+                        class="export-format json">
+                        <i class="fas fa-file-code"></i> JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #0891b2; --card-color-end: #22d3ee;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h5 class="report-title">تقرير التحليلات</h5>
+                <p class="report-desc">إحصائيات تفصيلية وتحليلات الأداء حسب الأقسام والتخصصات</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='analytics') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Report -->
+        <div class="col-md-6 col-lg-4">
+            <div class="report-card" style="--card-color-start: #dc2626; --card-color-end: #f87171;">
+                <div class="report-icon" style="background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h5 class="report-title">تقرير شبكة التعاون</h5>
+                <p class="report-desc">تحليل شبكة التعاون والعلاقات بين الباحثين</p>
+                <div>
+                    <a href="{{ url_for('download_report', report_type='collaboration') }}" class="export-format pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Report Builder -->
+    <div class="custom-report-builder">
+        <h4 class="mb-4"><i class="fas fa-tools me-2 text-primary"></i>منشئ التقارير المخصص</h4>
+
+        <form action="{{ url_for('generate_custom_report') }}" method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">اختر البيانات المطلوبة:</h6>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="include" value="researchers" checked>
+                        <i class="fas fa-user-graduate text-primary"></i>
+                        <span>معلومات الباحثين</span>
+                    </label>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="include" value="projects" checked>
+                        <i class="fas fa-folder text-success"></i>
+                        <span>المشاريع البحثية</span>
+                    </label>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="include" value="publications" checked>
+                        <i class="fas fa-file-alt text-warning"></i>
+                        <span>المنشورات العلمية</span>
+                    </label>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="include" value="analytics">
+                        <i class="fas fa-chart-bar text-info"></i>
+                        <span>التحليلات والإحصائيات</span>
+                    </label>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="include" value="collaboration">
+                        <i class="fas fa-project-diagram text-danger"></i>
+                        <span>شبكة التعاون</span>
+                    </label>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="mb-3">خيارات التقرير:</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label">القسم (اختياري)</label>
+                        <select class="form-select" name="department">
+                            <option value="">جميع الأقسام</option>
+                            <option value="CS">علوم الحاسوب</option>
+                            <option value="IT">تقنية المعلومات</option>
+                            <option value="MATH">الرياضيات</option>
+                            <option value="PHYS">الفيزياء</option>
+                            <option value="BIO">الأحياء</option>
+                            <option value="CHEM">الكيمياء</option>
+                            <option value="ENG">الهندسة</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">الفترة الزمنية</label>
+                        <select class="form-select" name="time_period">
+                            <option value="all">كل الوقت</option>
+                            <option value="year">السنة الأخيرة</option>
+                            <option value="6months">آخر 6 أشهر</option>
+                            <option value="month">الشهر الأخير</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">صيغة التقرير</label>
+                        <select class="form-select" name="format">
+                            <option value="pdf">PDF</option>
+                            <option value="csv">CSV (بيانات مجدولة)</option>
+                            <option value="json">JSON (بيانات خام)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="generate-btn">
+                    <i class="fas fa-magic me-2"></i> إنشاء التقرير المخصص
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Import Section -->
+    <div class="row mt-5">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-upload me-2"></i>استيراد البيانات</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">قم باستيراد بيانات الباحثين أو المشاريع من ملف CSV أو JSON</p>
+
+                    <form action="{{ url_for('import_data') }}" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">نوع البيانات</label>
+                            <select class="form-select" name="data_type" required>
+                                <option value="researchers">باحثين</option>
+                                <option value="projects">مشاريع</option>
+                                <option value="publications">منشورات</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الملف</label>
+                            <input type="file" class="form-control" name="file" accept=".csv,.json" required>
+                            <small class="text-muted">صيغ مدعومة: CSV, JSON</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-upload me-1"></i> استيراد
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-database me-2"></i>نسخ احتياطي</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">قم بتنزيل نسخة احتياطية كاملة من جميع بيانات النظام</p>
+
+                    <a href="{{ url_for('backup_all_data') }}" class="btn btn-success w-100 mb-3">
+                        <i class="fas fa-download me-1"></i> تنزيل نسخة احتياطية كاملة (JSON)
+                    </a>
+
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        النسخة الاحتياطية تتضمن: الباحثين، المشاريع، المنشورات، وبيانات التعاون
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animation for report cards
+    document.querySelectorAll('.report-card').forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate__animated', 'animate__fadeInUp');
+    });
+</script>
+{% endblock %}

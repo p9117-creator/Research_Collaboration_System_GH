@@ -1,0 +1,46 @@
+filebeat.inputs:
+- type: container
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/research-api/*.log
+  fields:
+    service: research-api
+  fields_under_root: true
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  indices:
+    - index: "research-api-%{+yyyy.MM.dd}"
+      when.contains:
+        container.name: "research_api"
+    - index: "research-web-%{+yyyy.MM.dd}"
+      when.contains:
+        container.name: "research_web"
+    - index: "filebeat-%{+yyyy.MM.dd}"
+
+setup.kibana:
+  host: "kibana:5601"
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

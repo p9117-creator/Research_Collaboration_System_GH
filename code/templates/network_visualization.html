@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}شبكة التعاون التفاعلية - نظام تعاون الباحثين{% endblock %}
+
+{% block head %}
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+    #network-container {
+        width: 100%;
+        height: 600px;
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        margin-bottom: 20px;
+    }
+
+    .network-controls {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 20px;
+        padding: 8px 15px;
+        background: #f8fafc;
+        border-radius: 10px;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-left: 10px;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .relationship-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 3px;
+    }
+
+    .badge-coauthored {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-supervises {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-mentors {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .node-details-panel {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+
+    .filter-btn {
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        margin: 5px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: #1e3a8a;
+        color: white;
+        border-color: #1e3a8a;
+    }
+
+    .zoom-controls {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: none;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .zoom-btn:hover {
+        background: #1e3a8a;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <style>
+        :root {
+            --network-primary: #4f46e5;
+            --network-secondary: #4338ca;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, var(--network-primary), var(--network-secondary));
+            color: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+            margin-bottom: 2rem;
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+        <div class="header-gradient shadow-lg d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fw-black display-5 mb-2">
+                    <i class="fas fa-network-wired me-2"></i> شبكة التعاون البحثي التفاعلية
+                </h1>
+                <p class="lead mb-0 opacity-75">استكشاف الروابط العلمية، التعاون المشترك، وتدفق المعرفة بين الباحثين</p>
+            </div>
+            <div>
+                <button class="btn btn-light btn-lg me-2" onclick="resetNetwork()">
+                    <i class="fas fa-sync-alt me-1"></i> إعادة تعيين
+                </button>
+                <button class="btn btn-outline-light btn-lg" onclick="exportNetworkImage()">
+                    <i class="fas fa-download me-1"></i> تصدير الشبكة
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-value" id="total-nodes">{{ stats.total_researchers or 0 }}</div>
+                    <div class="stats-label">إجمالي الباحثين</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                    <div class="stats-value" id="total-edges">{{ stats.total_collaborations or 0 }}</div>
+                    <div class="stats-label">علاقات التعاون</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);">
+                    <div class="stats-value" id="total-supervisions">{{ stats.total_supervisions or 0 }}</div>
+                    <div class="stats-label">علاقات الإشراف</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);">
+                    <div class="stats-value" id="avg-connections">{{
+                        "%.1f"|format(stats.avg_collaborations_per_researcher
+                        or 0) }}</div>
+                    <div class="stats-label">متوسط الروابط</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="network-controls">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h6 class="mb-3"><i class="fas fa-filter me-2"></i>فلترة حسب نوع العلاقة:</h6>
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-globe me-1"></i> الكل
+                    </button>
+                    <button class="filter-btn" data-filter="coauthored">
+                        <i class="fas fa-users me-1"></i> تعاون بحثي
+                    </button>
+                    <button class="filter-btn" data-filter="supervises">
+                        <i class="fas fa-user-graduate me-1"></i> إشراف
+                    </button>
+                    <button class="filter-btn" data-filter="mentors">
+                        <i class="fas fa-chalkboard-teacher me-1"></i> توجيه
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3"><i class="fas fa-palette me-2"></i>دليل الألوان:</h6>
+                    <div class="legend-item">
+                        <span>تعاون بحثي</span>
+                        <span class="legend-color" style="background: #3b82f6;"></span>
+                    </div>
+                    <div class="legend-item">
+                        <span>إشراف</span>
+                        <span class="legend-color" style="background: #10b981;"></span>
+                    </div>
+                    <div class="legend-item">
+                        <span>توجيه</span>
+                        <span class="legend-color" style="background: #f59e0b;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Visualization -->
+        <div class="card">
+            <div class="card-body p-0 position-relative">
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomIn()" title="تكبير">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="zoomOut()" title="تصغير">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="fitNetwork()" title="ملائمة">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                <div id="network-error" class="alert alert-warning m-3" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span>تعذر تحميل الشبكة التفاعلية.</span>
+                </div>
+                <div id="network-container"></div>
+            </div>
+        </div>
+
+        <!-- Node Details Panel -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="node-details-panel" id="nodeDetails">
+                    <h5 class="mb-3"><i class="fas fa-user-circle me-2"></i>تفاصيل الباحث</h5>
+                    <div id="nodeDetailsContent">
+                        <!-- Content will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-star me-2"></i>الأكثر تواصلاً
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="mostConnectedList">
+                            {% for researcher in stats.most_connected or [] %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ researcher.name }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ researcher.connections }}</span>
+                            </li>
+                            {% else %}
+                            <li class="list-group-item text-muted">لا توجد بيانات متاحة</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+        let network = null;
+        let allNodes = [];
+        let allEdges = [];
+
+        const networkData = {{ network_data | tojson | safe if network_data else '{}' }};
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeNetwork();
+            setupFilterButtons();
+        });
+
+        function initializeNetwork() {
+            const container = document.getElementById('network-container');
+            const errorDiv = document.getElementById('network-error');
+
+            // Check if vis is defined
+            if (typeof vis === 'undefined') {
+                errorDiv.style.display = 'block';
+                errorDiv.querySelector('span').textContent = 'تعذر تحميل مكتبة vis-network. يرجى التأكد من الاتصال بالإنترنت.';
+                container.style.display = 'none';
+                return;
+            }
+
+            // Process nodes
+            allNodes = (networkData.nodes || []).map(node => ({
+                id: node.id,
+                label: node.name || node.label || 'Unknown',
+                title: `${node.name || 'Unknown'}\nH-Index: ${node.h_index || 0}\nPublications: ${node.publication_count || 0}`,
+                value: (node.h_index || 1) * 5,
+                color: getNodeColor(node.department || ''),
+                font: { color: '#1e3a8a', size: 14, face: 'Tajawal' },
+                shape: 'dot',
+                borderWidth: 2,
+                borderWidthSelected: 4,
+                shadow: true
+            }));
+
+            if (allNodes.length === 0) {
+                errorDiv.style.display = 'block';
+                errorDiv.querySelector('span').textContent = 'لا توجد بيانات متاحة لعرض الشبكة حالياً.';
+            }
+
+            // Process edges
+            allEdges = (networkData.edges || []).map(edge => ({
+                from: edge.from || edge.source,
+                to: edge.to || edge.target,
+                type: edge.type || 'coauthored',
+                color: getEdgeColor(edge.type || 'coauthored'),
+                width: Math.min((edge.strength || 1) * 2, 8),
+                arrows: edge.type === 'supervises' || edge.type === 'mentors' ? { to: true } : undefined,
+                dashes: edge.type === 'mentors',
+                smooth: { type: 'curvedCW', roundness: 0.2 },
+                title: `${getRelationshipLabel(edge.type)}\nStrength: ${edge.strength || 1}`
+            }));
+
+            const data = {
+                nodes: new vis.DataSet(allNodes),
+                edges: new vis.DataSet(allEdges)
+            };
+
+            const options = {
+                nodes: {
+                    scaling: {
+                        min: 20,
+                        max: 60,
+                        label: { enabled: true, min: 14, max: 24 }
+                    }
+                },
+                edges: {
+                    smooth: {
+                        type: 'continuous',
+                        forceDirection: 'none'
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -3000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    },
+                    stabilization: {
+                        iterations: 150,
+                        updateInterval: 25
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: true,
+                    navigationButtons: false,
+                    keyboard: true
+                },
+                layout: {
+                    improvedLayout: true
+                }
+            };
+
+            network = new vis.Network(container, data, options);
+
+            // Event handlers
+            network.on('click', function (params) {
+                if (params.nodes.length > 0) {
+                    showNodeDetails(params.nodes[0]);
+                } else {
+                    hideNodeDetails();
+                }
+            });
+
+            network.on('doubleClick', function (params) {
+                if (params.nodes.length > 0) {
+                    // Navigate to researcher detail page
+                    window.location.href = `/researcher/${params.nodes[0]}`;
+                }
+            });
+
+            network.on('hoverNode', function (params) {
+                container.style.cursor = 'pointer';
+            });
+
+            network.on('blurNode', function (params) {
+                container.style.cursor = 'default';
+            });
+        }
+
+        function getNodeColor(department) {
+            const colors = {
+                'CS': '#3b82f6',
+                'IT': '#8b5cf6',
+                'MATH': '#10b981',
+                'PHYS': '#f59e0b',
+                'CHEM': '#ef4444',
+                'BIO': '#06b6d4',
+                'ENG': '#84cc16',
+                'MED': '#f97316'
+            };
+            return {
+                background: colors[department] || '#6b7280',
+                border: '#1e3a8a',
+                highlight: {
+                    background: '#1e3a8a',
+                    border: '#1e3a8a'
+                }
+            };
+        }
+
+        function getEdgeColor(type) {
+            const colors = {
+                'coauthored': { color: '#3b82f6', opacity: 0.6 },
+                'CO_AUTHORED_WITH': { color: '#3b82f6', opacity: 0.6 },
+                'supervises': { color: '#10b981', opacity: 0.8 },
+                'SUPERVISES': { color: '#10b981', opacity: 0.8 },
+                'mentors': { color: '#f59e0b', opacity: 0.7 },
+                'MENTORS': { color: '#f59e0b', opacity: 0.7 }
+            };
+            return colors[type] || { color: '#94a3b8', opacity: 0.5 };
+        }
+
+        function getRelationshipLabel(type) {
+            const labels = {
+                'coauthored': 'تعاون بحثي',
+                'CO_AUTHORED_WITH': 'تعاون بحثي',
+                'supervises': 'إشراف',
+                'SUPERVISES': 'إشراف',
+                'mentors': 'توجيه',
+                'MENTORS': 'توجيه'
+            };
+            return labels[type] || type;
+        }
+
+        function setupFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterNetwork(this.dataset.filter);
+                });
+            });
+        }
+
+        function filterNetwork(filterType) {
+            let filteredEdges;
+
+            if (filterType === 'all') {
+                filteredEdges = allEdges;
+            } else {
+                const typeMap = {
+                    'coauthored': ['coauthored', 'CO_AUTHORED_WITH'],
+                    'supervises': ['supervises', 'SUPERVISES'],
+                    'mentors': ['mentors', 'MENTORS']
+                };
+                filteredEdges = allEdges.filter(edge =>
+                    typeMap[filterType].includes(edge.type)
+                );
+            }
+
+            // Get nodes that are connected by the filtered edges
+            const connectedNodeIds = new Set();
+            filteredEdges.forEach(edge => {
+                connectedNodeIds.add(edge.from);
+                connectedNodeIds.add(edge.to);
+            });
+
+            const filteredNodes = filterType === 'all' ?
+                allNodes :
+                allNodes.filter(node => connectedNodeIds.has(node.id));
+
+            network.setData({
+                nodes: new vis.DataSet(filteredNodes),
+                edges: new vis.DataSet(filteredEdges)
+            });
+        }
+
+        function showNodeDetails(nodeId) {
+            const node = allNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            const detailsPanel = document.getElementById('nodeDetails');
+            const detailsContent = document.getElementById('nodeDetailsContent');
+
+            // Find connected researchers
+            const connections = allEdges.filter(e => e.from === nodeId || e.to === nodeId);
+
+            let connectionsHtml = connections.map(conn => {
+                const otherId = conn.from === nodeId ? conn.to : conn.from;
+                const otherNode = allNodes.find(n => n.id === otherId);
+                const badgeClass = conn.type.includes('supervise') ? 'badge-supervises' :
+                    conn.type.includes('mentor') ? 'badge-mentors' : 'badge-coauthored';
+                return `<span class="relationship-badge ${badgeClass}">${otherNode ? otherNode.label : otherId}</span>`;
+            }).join('');
+
+            detailsContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="text-primary">${node.label}</h4>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-link me-2"></i>${connections.length} علاقات
+                    </p>
+                    <a href="/researcher/${nodeId}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i> عرض الملف الشخصي
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <h6>العلاقات:</h6>
+                    <div>${connectionsHtml || '<span class="text-muted">لا توجد علاقات</span>'}</div>
+                </div>
+            </div>
+        `;
+
+            detailsPanel.style.display = 'block';
+        }
+
+        function hideNodeDetails() {
+            document.getElementById('nodeDetails').style.display = 'none';
+        }
+
+        function zoomIn() {
+            const scale = network.getScale() * 1.2;
+            network.moveTo({ scale: scale });
+        }
+
+        function zoomOut() {
+            const scale = network.getScale() / 1.2;
+            network.moveTo({ scale: scale });
+        }
+
+        function fitNetwork() {
+            network.fit({ animation: true });
+        }
+
+        function resetNetwork() {
+            document.querySelector('.filter-btn[data-filter="all"]').click();
+            network.fit({ animation: true });
+            hideNodeDetails();
+        }
+
+        function exportNetworkImage() {
+            try {
+                const canvas = document.querySelector('#network-container canvas');
+                if (canvas) {
+                    // Create a temporary canvas to add white background
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const ctx = tempCanvas.getContext('2d');
+
+                    // Fill white background
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                    // Draw original canvas over it
+                    ctx.drawImage(canvas, 0, 0);
+
+                    const link = document.createElement('a');
+                    link.download = 'collaboration_network.png';
+                    link.href = tempCanvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('لم يتم العثور على رسم الشبكة. يرجى الانتظار حتى يتم تحميل الشبكة بالكامل.');
+                }
+            } catch (err) {
+                console.error('Export failed:', err);
+                alert('حدث خطأ أثناء تصدير الصورة: ' + err.message);
+            }
+        }
+    </script>
+    {% endblock %}

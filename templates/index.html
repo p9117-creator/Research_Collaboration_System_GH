@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Research Collaboration System - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-university"></i> Research Collaboration System
+            </h1>
+            <p class="lead">
+                A comprehensive multi-database system demonstrating advanced NoSQL database integration
+                for managing research collaboration data across university researchers.
+            </p>
+            <hr class="my-4">
+            <p>
+                This system showcases the integration of four different NoSQL databases:
+            </p>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-file-alt fa-2x mb-2"></i>
+                        <h5>MongoDB</h5>
+                        <p class="small">Document Database</p>
+                        <p>Stores researcher profiles, projects, and publications</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-project-diagram fa-2x mb-2"></i>
+                        <h5>Neo4j</h5>
+                        <p class="small">Graph Database</p>
+                        <p>Manages collaboration networks and relationships</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-bolt fa-2x mb-2"></i>
+                        <h5>Redis</h5>
+                        <p class="small">Key-Value Store</p>
+                        <p>Provides high-performance caching and sessions</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h5>Cassandra</h5>
+                        <p class="small">Wide-Column Store</p>
+                        <p>Handles time-series analytics and metrics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Researcher Profiles</h5>
+                <p class="card-text">
+                    Comprehensive researcher profiles combining data from multiple databases,
+                    including academic information, collaboration networks, and publication records.
+                </p>
+                <a href="{{ url_for('researchers') }}" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Explore Researchers
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Analytics Dashboard</h5>
+                <p class="card-text">
+                    Real-time analytics and insights across departments, collaboration patterns,
+                    and research trends powered by multiple database queries.
+                </p>
+                <a href="{{ url_for('analytics') }}" class="btn btn-success">
+                    <i class="fas fa-analytics"></i> View Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-project-diagram fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Collaboration Networks</h5>
+                <p class="card-text">
+                    Interactive visualization of collaboration patterns, co-authorship networks,
+                    and research connections using graph database technology.
+                </p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-warning">
+                    <i class="fas fa-eye"></i> View Networks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> System Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-database"></i> Database Integration</h6>
+                        <ul>
+                            <li>Multi-database architecture with optimized data placement</li>
+                            <li>Cross-database queries and data consistency</li>
+                            <li>Real-time cache synchronization</li>
+                            <li>Event-driven data propagation</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-search"></i> Advanced Search</h6>
+                        <ul>
+                            <li>Multi-criteria researcher search</li>
+                            <li>Collaboration network analysis</li>
+                            <li>Publication and project filtering</li>
+                            <li>Real-time analytics queries</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-bar"></i> Analytics Capabilities</h6>
+                        <ul>
+                            <li>Department-level performance metrics</li>
+                            <li>Collaboration pattern analysis</li>
+                            <li>Research trend identification</li>
+                            <li>Publication impact assessment</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-cogs"></i> Performance Optimization</h6>
+                        <ul>
+                            <li>Intelligent caching strategies</li>
+                            <li>Query optimization across databases</li>
+                            <li>Horizontal and vertical scaling support</li>
+                            <li>Real-time performance monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-rocket"></i> Quick Start</h5>
+            </div>
+            <div class="card-body">
+                <p>Get started by exploring the system's capabilities:</p>
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-block w-100 mb-2">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('researchers') }}" class="btn btn-outline-primary btn-block w-100 mb-2">
+                            <i class="fas fa-users"></i> Browse Researchers
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('analytics') }}" class="btn btn-outline-primary btn-block w-100 mb-2">
+                            <i class="fas fa-chart-pie"></i> Analytics
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/api/researchers/search" class="btn btn-outline-primary btn-block w-100 mb-2" target="_blank">
+                            <i class="fas fa-code"></i> API Endpoint
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add some interactive effects
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate metric cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease-out';
+                }
+            });
+        });
+        
+        document.querySelectorAll('.card').forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,47 @@
+#!/bin/bash
+# Commit message hook for Research Collaboration System
+# Validates commit message format
+
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Regex pattern for conventional commits
+# Format: type(scope): subject
+pattern="^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\([a-z0-9_-]+\))?: .{1,50}$"
+
+# Get the first line (subject)
+first_line=$(echo "$commit_msg" | head -1)
+
+# Skip if it's a merge commit
+if echo "$first_line" | grep -qE "^Merge "; then
+    exit 0
+fi
+
+# Validate the commit message
+if ! echo "$first_line" | grep -qE "$pattern"; then
+    echo -e "${RED}ERROR: Invalid commit message format!${NC}"
+    echo ""
+    echo "Your commit message: '$first_line'"
+    echo ""
+    echo "Expected format: <type>(<scope>): <subject>"
+    echo ""
+    echo "Types: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert"
+    echo "Scope: Optional, lowercase (e.g., api, cli, auth, db)"
+    echo "Subject: Max 50 characters, imperative mood"
+    echo ""
+    echo "Examples:"
+    echo "  feat(api): add researcher search endpoint"
+    echo "  fix(auth): resolve JWT token expiration issue"
+    echo "  docs: update API documentation"
+    echo "  test(unit): add tests for MongoDB repository"
+    echo ""
+    exit 1
+fi
+
+echo -e "${GREEN}Commit message format is valid!${NC}"
+exit 0

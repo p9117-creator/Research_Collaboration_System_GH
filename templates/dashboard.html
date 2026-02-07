@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Research Collaboration System - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt"></i> System Dashboard</h2>
+        <p class="text-muted">Real-time overview of research collaboration metrics</p>
+    </div>
+</div>
+
+{% if overview.error %}
+<div class="row">
+    <div class="col-12">
+        <div class="error-message">
+            <strong>Error:</strong> {{ overview.error }}
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="metric-value">{{ overview.total_researchers }}</div>
+            <div class="metric-label">Total Researchers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="metric-value">{{ overview.total_projects }}</div>
+            <div class="metric-label">Total Projects</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="metric-value">{{ overview.total_publications }}</div>
+            <div class="metric-label">Total Publications</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="metric-value">{{ overview.recent_activity.recent_publications }}</div>
+            <div class="metric-label">Recent Publications</div>
+        </div>
+    </div>
+</div>
+
+<!-- Department Statistics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-building"></i> Department Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Researchers</th>
+                                <th>Avg H-Index</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept_id, stats in overview.department_statistics.items() %}
+                            <tr>
+                                <td>
+                                    {% if dept_id == 'dept_cs' %}Computer Science
+                                    {% elif dept_id == 'dept_bio' %}Biology
+                                    {% elif dept_id == 'dept_chem' %}Chemistry
+                                    {% elif dept_id == 'dept_math' %}Mathematics
+                                    {% elif dept_id == 'dept_physics' %}Physics
+                                    {% else %}{{ dept_id }}{% endif %}
+                                </td>
+                                <td>{{ stats.researcher_count }}</td>
+                                <td>{{ "%.1f"|format(stats.avg_h_index) }}</td>
+                                <td>
+                                    <span class="badge bg-success">Active</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Publications and Top Departments -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-newspaper"></i> Recent Publications</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_publications %}
+                    {% for pub in recent_publications %}
+                    <div class="publication-item mb-3 pb-3 border-bottom">
+                        <h6 class="mb-1">
+                            <a href="#" onclick="showPublicationDetails('{{ pub.id }}')" class="text-decoration-none">
+                                {{ pub.title[:80] }}{% if pub.title|length > 80 %}...{% endif %}
+                            </a>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> {{ pub.publication_date }} |
+                            <i class="fas fa-book"></i> {{ pub.journal }} |
+                            <i class="fas fa-quote-left"></i> {{ pub.citation_count }} citations
+                        </small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent publications found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-trophy"></i> Top Departments</h5>
+            </div>
+            <div class="card-body">
+                {% if top_departments %}
+                    {% for dept in top_departments %}
+                    <div class="department-item mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ dept.name }}</h6>
+                                <small class="text-muted">
+                                    {{ dept.researcher_count }} researchers | 
+                                    {{ dept.total_publications }} publications
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="h6 mb-0">H-Index: {{ "%.1f"|format(dept.avg_h_index) }}</div>
+                                <small class="text-muted">{{ dept.active_projects }} active projects</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No department data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Architecture Overview -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-sitemap"></i> Database Architecture</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-primary text-white p-3 rounded mb-2">
+                                <i class="fas fa-file-alt fa-2x"></i>
+                            </div>
+                            <h6>MongoDB</h6>
+                            <p class="small text-muted">Document Storage</p>
+                            <p class="small">Researcher profiles, projects, publications</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-success text-white p-3 rounded mb-2">
+                                <i class="fas fa-project-diagram fa-2x"></i>
+                            </div>
+                            <h6>Neo4j</h6>
+                            <p class="small text-muted">Graph Database</p>
+                            <p class="small">Collaboration networks and relationships</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-warning text-white p-3 rounded mb-2">
+                                <i class="fas fa-bolt fa-2x"></i>
+                            </div>
+                            <h6>Redis</h6>
+                            <p class="small text-muted">Cache Store</p>
+                            <p class="small">Sessions, cached profiles, recent data</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-info text-white p-3 rounded mb-2">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                            </div>
+                            <h6>Cassandra</h6>
+                            <p class="small text-muted">Time-Series DB</p>
+                            <p class="small">Analytics, metrics, performance data</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Data Flow Integration</h6>
+                    <div class="alert alert-info">
+                        <strong>Multi-Database Strategy:</strong> This system demonstrates optimal data placement across different NoSQL databases, 
+                        with each database handling data types that match its strengths. Data is synchronized across databases 
+                        using event-driven patterns and cache invalidation strategies.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Last Updated -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="text-muted text-center">
+            <small>
+                <i class="fas fa-clock"></i> Last updated: {{ overview.last_updated }} | 
+                <i class="fas fa-sync-alt"></i> Real-time data from multiple databases
+            </small>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showPublicationDetails(publicationId) {
+    // This would typically make an API call to get publication details
+    alert('Publication details for ID: ' + publicationId + '\n\nIn a full implementation, this would show a detailed view of the publication with authors, abstracts, and citation information.');
+}
+
+// Auto-refresh dashboard every 30 seconds
+setInterval(function() {
+    // In a real application, you would refresh the data via AJAX
+    console.log('Dashboard auto-refresh (every 30s)');
+}, 30000);
+
+// Add some animation to metrics
+document.addEventListener('DOMContentLoaded', function() {
+    const metrics = document.querySelectorAll('.metric-value');
+    metrics.forEach((metric, index) => {
+        setTimeout(() => {
+            metric.style.animation = 'pulse 0.5s ease-in-out';
+        }, index * 200);
+    });
+});
+</script>
+
+<style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.publication-item:hover, .department-item:hover {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+    margin: -10px -15px 10px -15px;
+}
+
+.metric-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

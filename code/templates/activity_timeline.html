@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+
+{% block title %}سجل النشاط - نظام تعاون الباحثين{% endblock %}
+
+{% block head %}
+<style>
+    .timeline-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+    }
+
+    .timeline-container {
+        position: relative;
+        padding-right: 40px;
+    }
+
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        right: 15px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, #3b82f6 0%, #e2e8f0 100%);
+        border-radius: 3px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding: 20px 30px 20px 20px;
+        margin-bottom: 25px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease forwards;
+        opacity: 0;
+    }
+
+    .timeline-item:hover {
+        transform: translateX(-10px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        right: -36px;
+        top: 30px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        border: 4px solid;
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    .timeline-item.create::before {
+        border-color: #10b981;
+    }
+
+    .timeline-item.update::before {
+        border-color: #3b82f6;
+    }
+
+    .timeline-item.delete::before {
+        border-color: #ef4444;
+    }
+
+    .timeline-item.collaboration::before {
+        border-color: #8b5cf6;
+    }
+
+    .timeline-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .timeline-icon.create {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    }
+
+    .timeline-icon.update {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    }
+
+    .timeline-icon.delete {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    }
+
+    .timeline-icon.collaboration {
+        background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    }
+
+    .timeline-content {
+        flex-grow: 1;
+        margin-right: 15px;
+    }
+
+    .timeline-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 5px;
+    }
+
+    .timeline-desc {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    .timeline-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+
+    .timeline-date {
+        background: #f1f5f9;
+        padding: 15px 20px;
+        border-radius: 12px;
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .timeline-date .day {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        display: block;
+    }
+
+    .timeline-date .month {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .filter-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+
+    .filter-btn {
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: #1e3a8a;
+        color: white;
+        border-color: #1e3a8a;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-box {
+        flex: 1;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-box .number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e3a8a;
+    }
+
+    .stat-box .label {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .load-more-btn {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .load-more-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .timeline-item:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .timeline-item:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .timeline-item:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .timeline-item:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    .timeline-item:nth-child(5) {
+        animation-delay: 0.5s;
+    }
+
+    .entity-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .entity-badge.researcher {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .entity-badge.project {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .entity-badge.publication {
+        background: #fef3c7;
+        color: #92400e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --timeline-primary: #1e3a8a;
+        --timeline-secondary: #3b82f6;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--timeline-primary), var(--timeline-secondary));
+        color: white;
+        padding: 3rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(30, 58, 138, 0.2);
+        margin-bottom: 3rem;
+    }
+</style>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    <div class="header-gradient shadow-lg">
+        <div class="row align-items-center g-4">
+            <div class="col-md">
+                <h1 class="fw-black display-4 mb-2">
+                    <i class="fas fa-history me-3 text-white-50"></i>سجل النشاط
+                </h1>
+                <p class="lead opacity-90 mb-0">مراقبة التغييرات والنشاطات الأخيرة في النظام</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="number" style="color: #10b981;">{{ stats.total_created or 0 }}</div>
+            <div class="label"><i class="fas fa-plus-circle me-1"></i>عناصر مضافة</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: #3b82f6;">{{ stats.total_updated or 0 }}</div>
+            <div class="label"><i class="fas fa-edit me-1"></i>تعديلات</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: #ef4444;">{{ stats.total_deleted or 0 }}</div>
+            <div class="label"><i class="fas fa-trash me-1"></i>محذوفات</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: #8b5cf6;">{{ stats.total_collaborations or 0 }}</div>
+            <div class="label"><i class="fas fa-handshake me-1"></i>تعاونات جديدة</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <span class="me-3"><i class="fas fa-filter text-primary"></i> فلترة:</span>
+                <button class="filter-btn active" data-filter="all">الكل</button>
+                <button class="filter-btn" data-filter="create">
+                    <i class="fas fa-plus-circle text-success"></i> إضافة
+                </button>
+                <button class="filter-btn" data-filter="update">
+                    <i class="fas fa-edit text-primary"></i> تعديل
+                </button>
+                <button class="filter-btn" data-filter="delete">
+                    <i class="fas fa-trash text-danger"></i> حذف
+                </button>
+                <button class="filter-btn" data-filter="collaboration">
+                    <i class="fas fa-handshake text-purple"></i> تعاون
+                </button>
+            </div>
+            <div class="col-md-4">
+                <input type="date" class="form-control" id="dateFilter" onchange="filterByDate()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-container" id="timeline">
+        {% for activity in activities %}
+        <div class="timeline-item {{ activity.action_type }}" data-type="{{ activity.action_type }}">
+            <div class="d-flex">
+                <div class="timeline-icon {{ activity.action_type }}">
+                    {% if activity.action_type == 'create' %}
+                    <i class="fas fa-plus"></i>
+                    {% elif activity.action_type == 'update' %}
+                    <i class="fas fa-edit"></i>
+                    {% elif activity.action_type == 'delete' %}
+                    <i class="fas fa-trash"></i>
+                    {% else %}
+                    <i class="fas fa-handshake"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="entity-badge {{ activity.entity_type }}">
+                                {% if activity.entity_type == 'researcher' %}باحث
+                                {% elif activity.entity_type == 'project' %}مشروع
+                                {% elif activity.entity_type == 'publication' %}منشور
+                                {% else %}{{ activity.entity_type }}{% endif %}
+                            </span>
+                            <h6 class="timeline-title mt-2">{{ activity.title }}</h6>
+                            <p class="timeline-desc">{{ activity.description }}</p>
+                        </div>
+                        <div class="timeline-date">
+                            <span class="day">{{ activity.timestamp.day if activity.timestamp else '--' }}</span>
+                            <span class="month">{{ activity.timestamp.strftime('%b') if activity.timestamp else '--'
+                                }}</span>
+                        </div>
+                    </div>
+                    <div class="timeline-meta">
+                        <span><i class="fas fa-clock me-1"></i>{{ activity.timestamp.strftime('%H:%M') if
+                            activity.timestamp else '--:--' }}</span>
+                        <span><i class="fas fa-user me-1"></i>{{ activity.user or 'النظام' }}</span>
+                        {% if activity.entity_id %}
+                        <a href="{{ url_for(activity.entity_type + '_detail', **{activity.entity_type + '_id': activity.entity_id}) }}"
+                            class="text-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>عرض
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Sample activities for demo -->
+        <div class="timeline-item create" data-type="create">
+            <div class="d-flex">
+                <div class="timeline-icon create">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="entity-badge researcher">باحث</span>
+                            <h6 class="timeline-title mt-2">تمت إضافة باحث جديد</h6>
+                            <p class="timeline-desc">تمت إضافة الباحث "أحمد محمد" إلى قسم علوم الحاسوب</p>
+                        </div>
+                        <div class="timeline-date">
+                            <span class="day">17</span>
+                            <span class="month">يناير</span>
+                        </div>
+                    </div>
+                    <div class="timeline-meta">
+                        <span><i class="fas fa-clock me-1"></i>14:30</span>
+                        <span><i class="fas fa-user me-1"></i>النظام</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-item update" data-type="update">
+            <div class="d-flex">
+                <div class="timeline-icon update">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="entity-badge project">مشروع</span>
+                            <h6 class="timeline-title mt-2">تم تحديث مشروع بحثي</h6>
+                            <p class="timeline-desc">تم تحديث حالة المشروع "تطوير نظام ذكاء اصطناعي" إلى "قيد التنفيذ"
+                            </p>
+                        </div>
+                        <div class="timeline-date">
+                            <span class="day">16</span>
+                            <span class="month">يناير</span>
+                        </div>
+                    </div>
+                    <div class="timeline-meta">
+                        <span><i class="fas fa-clock me-1"></i>10:15</span>
+                        <span><i class="fas fa-user me-1"></i>admin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-item collaboration" data-type="collaboration">
+            <div class="d-flex">
+                <div class="timeline-icon collaboration">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="entity-badge researcher">تعاون</span>
+                            <h6 class="timeline-title mt-2">تعاون بحثي جديد</h6>
+                            <p class="timeline-desc">تم إنشاء علاقة تعاون بين "د. سارة أحمد" و "د. خالد محمود"</p>
+                        </div>
+                        <div class="timeline-date">
+                            <span class="day">15</span>
+                            <span class="month">يناير</span>
+                        </div>
+                    </div>
+                    <div class="timeline-meta">
+                        <span><i class="fas fa-clock me-1"></i>16:45</span>
+                        <span><i class="fas fa-user me-1"></i>النظام</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-item create" data-type="create">
+            <div class="d-flex">
+                <div class="timeline-icon create">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="entity-badge publication">منشور</span>
+                            <h6 class="timeline-title mt-2">منشور علمي جديد</h6>
+                            <p class="timeline-desc">تم نشر ورقة بحثية جديدة في مجلة IEEE</p>
+                        </div>
+                        <div class="timeline-date">
+                            <span class="day">14</span>
+                            <span class="month">يناير</span>
+                        </div>
+                    </div>
+                    <div class="timeline-meta">
+                        <span><i class="fas fa-clock me-1"></i>09:00</span>
+                        <span><i class="fas fa-user me-1"></i>النظام</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More -->
+    <div class="text-center mt-4 mb-5">
+        <button class="load-more-btn" onclick="loadMore()">
+            <i class="fas fa-sync-alt me-2"></i>تحميل المزيد
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            filterTimeline(this.dataset.filter);
+        });
+    });
+
+    function filterTimeline(filter) {
+        const items = document.querySelectorAll('.timeline-item');
+        items.forEach(item => {
+            if (filter === 'all' || item.dataset.type === filter) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function filterByDate() {
+        const date = document.getElementById('dateFilter').value;
+        if (!date) return;
+
+        // In a real implementation, this would make an API call
+        console.log('Filtering by date:', date);
+    }
+
+    function loadMore() {
+        // In a real implementation, this would load more activities
+        alert('سيتم تحميل المزيد من الأنشطة...');
+    }
+
+    function exportActivityLog() {
+        window.location.href = '{{ url_for("export_activity_log") }}';
+    }
+</script>
+{% endblock %}

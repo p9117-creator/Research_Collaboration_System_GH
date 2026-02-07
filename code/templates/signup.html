@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}إنشاء حساب جديد - نظام التعاون البحثي{% endblock %}
+
+{% block content %}
+<style>
+    .auth-page {
+        background: linear-gradient(135deg, #f8fafc 0%, #d6e0f0 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+    }
+
+    .auth-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+        overflow: hidden;
+        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .auth-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        padding: 3rem 2rem;
+        text-align: center;
+        color: white;
+    }
+
+    .form-control-lg {
+        border-radius: 16px;
+        padding: 0.85rem 1.25rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #e2e8f0;
+        transition: var(--transition-smooth);
+    }
+
+    .form-control-lg:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-group-text {
+        border-radius: 16px 0 0 16px !important;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-right: 0;
+        color: #64748b;
+    }
+
+    html[dir="rtl"] .input-group-text {
+        border-radius: 0 16px 16px 0 !important;
+        border-left: 0;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    html[dir="rtl"] .form-control-lg {
+        border-radius: 16px 0 0 16px !important;
+    }
+
+    .btn-signup {
+        border-radius: 16px;
+        padding: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        background: #3b82f6;
+        border: none;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-signup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+    }
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div
+                class="bg-white bg-opacity-10 w-auto d-inline-flex p-3 rounded-4 border border-white border-opacity-20 mb-3">
+                <i class="fas fa-user-plus fa-3x"></i>
+            </div>
+            <h2 class="fw-black mb-1">إنشاء حساب جديد</h2>
+            <p class="opacity-75 mb-0 px-4">انضم إلى أكبر منصة للتعاون البحثي العلمي في المنطقة</p>
+        </div>
+
+        <div class="card-body p-4 p-lg-5">
+            <form method="POST" action="{{ url_for('signup') }}">
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small mb-2">الاسم الكامل</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control form-control-lg" name="full_name"
+                            placeholder="أدخل اسمك كما يظهر في الأبحاث" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small mb-2">البريد الإلكتروني المؤسسي</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control form-control-lg" name="email"
+                            placeholder="name@university.edu" required>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold text-dark small mb-2">كلمة المرور</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control form-control-lg" name="password"
+                                placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold text-dark small mb-2">تأكيد كلمة المرور</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
+                            <input type="password" class="form-control form-control-lg" name="confirm_password"
+                                placeholder="••••••••" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4 d-flex align-items-baseline">
+                    <input type="checkbox" class="form-check-input me-2 mt-1" id="terms" required>
+                    <label class="form-check-label text-muted small" for="terms">
+                        أوافق على <a href="#" class="text-primary text-decoration-none">شروط الخدمة</a> و <a href="#"
+                            class="text-primary text-decoration-none">سياسة الخصوصية</a> المتعلقة بالأبحاث.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-signup w-100 shadow-lg text-white mb-4">
+                    إنشاء الحساب <i class="fas fa-arrow-left ms-2"></i>
+                </button>
+
+                <div class="text-center">
+                    <p class="text-muted small mb-0">لديك حساب بالفعل؟
+                        <a href="{{ url_for('login') }}" class="text-primary fw-black text-decoration-none ms-1">تسجيل
+                            الدخول</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* تحسينات بصرية عامة */
+    :root {
+        --researcher-primary: #4361ee;
+        --researcher-secondary: #3f37c9;
+        --bg-light: #f8f9fa;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--researcher-primary), var(--researcher-secondary));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-card {
+        border: none;
+        border-radius: 12px;
+        transform: translateY(-20px);
+        margin-bottom: -10px;
+    }
+
+    .table-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background-color: #f1f4f9;
+        color: #5e6e82;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        border: none;
+        padding: 1.2rem;
+    }
+
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        background: #eef2ff;
+        color: var(--researcher-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: bold;
+    }
+
+    .badge-dept {
+        background-color: #e0e7ff;
+        color: #4338ca;
+        border-radius: 6px;
+        padding: 0.4em 0.8em;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 20px;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+        border-color: var(--researcher-primary);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div
+        class="header-gradient shadow-lg d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+        <div>
+            <h1 class="fw-black display-5 mb-2">
+                <i class="fas fa-users-cog me-2"></i> إدارة الباحثين
+            </h1>
+            <p class="lead mb-0 opacity-75">إدارة وتعديل بيانات الكادر البحثي والأكاديمي والأداء العلمي</p>
+        </div>
+        <div>
+            <button
+                class="btn btn-white btn-lg rounded-pill px-4 fw-bold shadow-sm hover-up border-0 text-primary bg-white"
+                data-bs-toggle="modal" data-bs-target="#addResearcherModal" style="height: 56px;">
+                <i class="fas fa-plus-circle me-2"></i> إضافة باحث جديد
+            </button>
+        </div>
+    </div>
+
+    <div class="card filter-card shadow-sm mx-3">
+        <div class="card-body p-4">
+            <form action="{{ url_for('researchers') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">البحث عن اسم</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i
+                                class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                            placeholder="اكتب اسم الباحث..." value="{{ request.args.get('search', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">القسم الأكاديمي</label>
+                    <select name="department" class="form-select">
+                        <option value="">جميع الأقسام</option>
+                        <option value="dept_cs" {% if request.args.get('department')=='dept_cs' %}selected{% endif %}>
+                            Computer Science</option>
+                        <option value="dept_bio" {% if request.args.get('department')=='dept_bio' %}selected{% endif %}>
+                            Biology</option>
+                        <option value="dept_chem" {% if request.args.get('department')=='dept_chem' %}selected{% endif
+                            %}>Chemistry</option>
+                        <option value="dept_math" {% if request.args.get('department')=='dept_math' %}selected{% endif
+                            %}>Mathematics</option>
+                        <option value="dept_physics" {% if request.args.get('department')=='dept_physics' %}selected{%
+                            endif %}>Physics</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">H-Index (الأدنى)</label>
+                    <input type="number" name="min_h_index" class="form-control" placeholder="مثال: 10"
+                        value="{{ request.args.get('min_h_index', '') }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                        تصفية النتائج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card table-card shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">الباحث</th>
+                            <th>المسمى الوظيفي</th>
+                            <th>القسم</th>
+                            <th>معلومات الاتصال</th>
+                            <th class="text-center">إدارة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for researcher in researchers %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3">
+                                        {{ researcher.get('personal_info', {}).get('first_name', 'U')[0] }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">
+                                            {{ researcher.get('personal_info', {}).get('first_name', 'غير') }}
+                                            {{ researcher.get('personal_info', {}).get('last_name', 'مسجل') }}
+                                        </div>
+                                        <small class="text-muted">ID: {{ researcher._id|string|truncate(8, True, '')
+                                            }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-secondary fw-medium">
+                                    <i class="fas fa-briefcase me-1 small"></i>
+                                    {{ researcher.get('academic_profile', {}).get('position', 'غير محدد') }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-dept">
+                                    {{ researcher.get('academic_profile', {}).get('department_id', 'عام') }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small text-dark"><i class="far fa-envelope me-1 text-muted"></i> {{
+                                    researcher.get('personal_info', {}).get('email', '-') }}</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ url_for('researcher_detail', researcher_id=researcher._id|string) }}"
+                                        class="btn btn-action btn-outline-primary" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <button type="button" class="btn btn-action btn-outline-warning"
+                                        onclick="editResearcher('{{ researcher._id|string }}')" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <form
+                                        action="{{ url_for('delete_researcher', researcher_id=researcher._id|string) }}"
+                                        method="POST" style="display:inline;"
+                                        onsubmit="return confirm('هل أنت متأكد من حذف هذا الباحث نهائياً؟');">
+                                        <button type="submit" class="btn btn-action btn-outline-danger" title="حذف">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/5089/5089731.png"
+                                    style="width: 80px; opacity: 0.3;" class="mb-3">
+                                <p class="text-muted fw-bold">لم يتم العثور على باحثين مطابقين للبحث</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addResearcherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i>إضافة باحث جديد</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/add_researcher" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الاسم الكامل</label>
+                        <input type="text" name="name" class="form-control" placeholder="أدخل الاسم الثلاثي" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">التخصص الدقيق</label>
+                        <input type="text" name="field" class="form-control" placeholder="مثلاً: ذكاء اصطناعي" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">القسم</label>
+                        <input type="text" name="department" class="form-control" placeholder="اسم القسم">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">البريد الإلكتروني الجامعي</label>
+                        <input type="email" name="email" class="form-control" placeholder="name@university.edu"
+                            required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">حفظ البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editResearcherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2"></i>تعديل الملف الشخصي</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editResearcherForm" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الاسم الكامل</label>
+                        <input type="text" id="edit_name" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">التخصص / المسمى</label>
+                        <input type="text" id="edit_field" name="field" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">القسم</label>
+                        <input type="text" id="edit_department" name="department" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">البريد الإلكتروني</label>
+                        <input type="email" id="edit_email" name="email" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">تراجع</button>
+                    <button type="submit" class="btn btn-warning px-4 fw-bold">تحديث التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    function editResearcher(researcherId) {
+        const modalElement = document.getElementById('editResearcherModal');
+        const modal = new bootstrap.Modal(modalElement);
+
+        fetch('/get_researcher/' + researcherId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                const firstName = data.personal_info ? data.personal_info.first_name : '';
+                const lastName = data.personal_info ? data.personal_info.last_name : '';
+                document.getElementById('edit_name').value = (firstName + ' ' + lastName).trim();
+                document.getElementById('edit_field').value = data.academic_profile ? data.academic_profile.position : '';
+                document.getElementById('edit_department').value = data.academic_profile ? data.academic_profile.department_id : '';
+                document.getElementById('edit_email').value = data.personal_info ? data.personal_info.email : '';
+
+                document.getElementById('editResearcherForm').action = '/edit_researcher/' + researcherId;
+
+                modal.show();
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+            });
+    }
+</script>
+{% endblock %}
+{% endblock %}

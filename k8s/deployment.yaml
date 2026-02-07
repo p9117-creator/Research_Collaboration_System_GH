@@ -1,0 +1,167 @@
+# Research Collaboration System - Kubernetes Deployment
+# This manifest defines the deployment configuration for the research API service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: research-api
+  namespace: research-system
+  labels:
+    app: research-api
+    version: v1
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: research-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: research-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: research-api-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: research-api
+        image: research-collab/api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: mongodb-uri
+        - name: NEO4J_URI
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-uri
+        - name: NEO4J_USER
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-user
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-password
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: redis-url
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: jwt-secret
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: config-volume
+        configMap:
+          name: research-api-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: research-api
+              topologyKey: kubernetes.io/hostname
+---
+# Web Interface Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: research-web
+  namespace: research-system
+  labels:
+    app: research-web
+    version: v1
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: research-web
+  template:
+    metadata:
+      labels:
+        app: research-web
+        version: v1
+    spec:
+      containers:
+      - name: research-web
+        image: research-collab/web:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: API_URL
+          value: "http://research-api:8000"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: mongodb-uri
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 10

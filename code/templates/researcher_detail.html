@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.basic_info.first_name }} {{ profile.basic_info.last_name }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --profile-primary: #2563eb;
+        --profile-secondary: #1d4ed8;
+        --profile-accent: #60a5fa;
+        --accent-color: #f8f9fa;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--profile-primary), var(--profile-secondary));
+        color: white;
+        padding: 4rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: white;
+        color: var(--profile-primary);
+        font-size: 3rem;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .h-index-badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 1rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .card {
+        border-radius: 12px;
+        border: 1px solid #edf2f9;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .badge-soft-primary {
+        background-color: #e7f1ff;
+        color: #2563eb;
+    }
+
+    .badge-soft-success {
+        background-color: #e1fcef;
+        color: #198754;
+    }
+
+    .publication-item {
+        border-right: 4px solid var(--profile-primary);
+        /* Adjusted for RTL */
+        transition: 0.2s;
+    }
+
+    .publication-item:hover {
+        border-right-width: 8px;
+        background-color: #fcfcfc;
+    }
+</style>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    <div class="header-gradient shadow-lg">
+        <div class="row align-items-center g-4">
+            <div class="col-md-auto">
+                <div class="profile-avatar rounded-circle d-flex align-items-center justify-content-center fw-black">
+                    {{ profile.basic_info.first_name[0] }}{{ profile.basic_info.last_name[0] }}
+                </div>
+            </div>
+            <div class="col-md">
+                <h1 class="fw-black display-4 mb-2">{{ profile.basic_info.first_name }} {{ profile.basic_info.last_name
+                    }}</h1>
+                <p class="lead opacity-90 mb-0">
+                    <i class="fas fa-university me-2 text-white-50"></i>{{ profile.basic_info.department }}
+                </p>
+                <p class="opacity-75">
+                    <i class="fas fa-envelope me-2 text-white-50"></i>{{ profile.basic_info.email }}
+                </p>
+            </div>
+            <div class="col-md-auto">
+                <div class="h-index-badge">
+                    <h2 class="fw-black mb-0 display-5">{{ profile.collaboration_metrics.h_index }}</h2>
+                    <small class="text-uppercase tracking-wider opacity-75">H-Index</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 order-lg-2">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-chart-line text-primary me-2"></i>مقاييس الأداء</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded-3">
+                        <span class="text-muted">المنشورات</span>
+                        <span class="h5 mb-0 fw-bold text-primary">{{ profile.collaboration_metrics.total_publications
+                            }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded-3">
+                        <span class="text-muted">الاقتباسات</span>
+                        <span class="h5 mb-0 fw-bold text-info">{{ profile.publications.total_citations }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                        <span class="text-muted">المتعاونون</span>
+                        <span class="h5 mb-0 fw-bold text-success">{{ profile.collaboration_network.collaboration_count
+                            }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-tags text-primary me-2"></i>الاهتمامات البحثية</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for interest in profile.research_interests %}
+                        <span class="badge badge-soft-primary px-3 py-2">{{ interest }}</span>
+                        {% else %}
+                        <p class="text-muted small">لا توجد اهتمامات بحثية مسجلة.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 bg-light">
+                <!-- <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        {% if profile.cache_status == 'hit' %}
+                        <i class="fas fa-bolt text-success fa-2x"></i>
+                        {% else %}
+                        <i class="fas fa-database text-warning fa-2x"></i>
+                        {% endif %}
+                    </div>
+
+                </div> -->
+            </div>
+        </div>
+
+        <div class="col-lg-8 order-lg-1">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-project-diagram text-primary me-2"></i>أبرز المتعاونين
+                    </h5>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal"
+                        data-bs-target="#addCollaboratorModal">
+                        <i class="fas fa-plus me-1"></i> إضافة
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for collaborator in network_data %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-shadow">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ collaborator.name }}</h6>
+                                    <small class="text-muted">H-Index: {{ collaborator.h_index }}</small>
+                                </div>
+                                <div class="text-start">
+                                    <span class="badge badge-soft-success me-2">المسافة: {{ collaborator.distance
+                                        }}</span>
+                                    <button class="btn btn-sm text-danger btn-light"
+                                        onclick="removeCollaborator('{{ collaborator.id }}', '{{ collaborator.name }}')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-4">
+                            <p class="text-muted">لا يوجد متعاونون مسجلون حالياً.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-book-open text-primary me-2"></i>أحدث المنشورات العلمية
+                    </h5>
+                    <span class="badge rounded-pill bg-light text-primary border">{{ profile.publications.count }}
+                        بحث</span>
+                </div>
+                <div class="card-body">
+                    {% for pub in profile.publications.list[:5] %}
+                    <div class="publication-item p-3 mb-3 bg-white shadow-sm rounded-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold text-primary mb-1">{{ pub.title }}</h6>
+                            <span class="badge bg-light text-dark">{{ pub.bibliographic_info.publication_year or '2023'
+                                }}</span>
+                        </div>
+                        <p class="text-muted small mb-2"><i class="fas fa-journal-whills me-1"></i> {{
+                            pub.bibliographic_info.journal }}</p>
+                        <div class="d-flex align-items-center">
+                            <span class="badge badge-soft-success small">
+                                <i class="fas fa-quote-left me-1"></i> {{ pub.metrics.citation_count }} اقتباس
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">لا توجد منشورات متوفرة.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-tasks text-primary me-2"></i>المشاريع الجارية</h5>
+                </div>
+                <div class="card-body">
+                    {% for project in profile.projects.list %}
+                    <div class="p-3 border-bottom last-child-border-0">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold text-dark mb-0">{{ project.title }}</h6>
+                            <span class="badge bg-success-subtle text-success border border-success px-3">{{
+                                project.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-0">{{ project.description }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">لا توجد مشاريع جارية حالياً.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCollaboratorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">إضافة متعاون جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="mb-3">
+                    <label class="form-label text-muted">اختر الباحث من القائمة</label>
+                    <select class="form-select form-select-lg border-2" id="collaborator_select">
+                        <option value="">جارِ التحميل...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary px-4" onclick="addCollaborator()">تأكيد الإضافة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const researcherId = "{{ profile.researcher_id }}";
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/researchers/list?limit=100')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('collaborator_select');
+                select.innerHTML = '<option value="">اختر باحث...</option>';
+                data.forEach(r => {
+                    if (r._id !== researcherId) {
+                        const opt = document.createElement('option');
+                        opt.value = r._id;
+                        opt.text = `${r.personal_info.first_name} ${r.personal_info.last_name}`;
+                        select.appendChild(opt);
+                    }
+                });
+            });
+    });
+
+    function addCollaborator() {
+        const collaboratorId = document.getElementById('collaborator_select').value;
+        if (!collaboratorId) return;
+
+        fetch(`/api/researcher/${researcherId}/collaborators/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collaborator_id: collaboratorId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            });
+    }
+
+    function removeCollaborator(collabId, name) {
+        if (!confirm(`هل أنت متأكد من حذف ${name} من قائمة المتعاونين؟`)) return;
+
+        fetch(`/api/researcher/${researcherId}/collaborators/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collaborator_id: collabId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            });
+    }
+</script>
+{% endblock %}

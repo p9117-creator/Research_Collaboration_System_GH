@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} - تفاصيل المشروع{% endblock %}
+
+{% block content %}
+<style>
+    .project-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border-radius: 15px;
+        color: white;
+    }
+
+    .info-card {
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .badge-status-active {
+        background-color: #198754;
+    }
+
+    .badge-status-completed {
+        background-color: #0d6efd;
+    }
+
+    .badge-status-planned {
+        background-color: #6c757d;
+    }
+
+    .researcher-chip {
+        background: #f8f9fa;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        margin: 0.25rem;
+        border: 1px solid #e9ecef;
+    }
+</style>
+
+<style>
+    :root {
+        --detail-primary: #1e1b4b;
+        --detail-secondary: #312e81;
+    }
+
+    .header-gradient {
+        background: linear-gradient(135deg, var(--detail-primary), var(--detail-secondary));
+        color: white;
+        padding: 3rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(30, 27, 75, 0.2);
+        margin-bottom: 3rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-gradient shadow-lg">
+        <div class="row align-items-center g-4">
+            <div class="col-md">
+                <h1 class="fw-black display-4 mb-3">
+                    <i class="fas fa-project-diagram me-3 text-white-50"></i>{{ project.title }}
+                </h1>
+                <div class="d-flex flex-wrap gap-3 opacity-90 lead">
+                    <span class="badge bg-white text-primary rounded-pill px-3 py-2">
+                        <i class="fas fa-tag me-2"></i> {{ project.status }}
+                    </span>
+                    <span class="ms-md-4">
+                        <i class="fas fa-calendar-alt me-2"></i> {{ project.start_date }} - {{ project.end_date }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <!-- PIs -->
+            <div class="card info-card mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-user-tie text-primary me-2"></i> الباحثين الرئيسيين (PI)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if project.participants and project.participants.principal_investigators %}
+                    {% for pi in project.participants.principal_investigators %}
+                    <div class="researcher-chip">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            PI
+                        </div>
+                        <div>
+                            <strong>{{ pi.name or 'غير معروف' }}</strong>
+                            <br>
+                            <small class="text-muted font-monospace">{{ pi.researcher_id|truncate(12, True, '')
+                                }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted mb-0">لم يتم تحديد باحثين رئيسيين.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Co-Investigators -->
+            <div class="card info-card mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-users text-info me-2"></i> الباحثين المشاركين (Co-PI)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if project.participants and project.participants.co_investigators %}
+                    {% for copi in project.participants.co_investigators %}
+                    <div class="researcher-chip">
+                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width: 32px; height: 32px; font-size: 0.7rem;">
+                            Co
+                        </div>
+                        <div>
+                            <strong>{{ copi.name or 'غير معروف' }}</strong>
+                            <br>
+                            <small class="text-muted font-monospace">{{ copi.researcher_id|truncate(12, True, '')
+                                }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted mb-0">لا يوجد باحثين مشاركين.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Project Info -->
+            <div class="card info-card mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-info-circle text-primary me-2"></i> معلومات المشروع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-muted">معرف المشروع</span>
+                        <code class="small">{{ project._id|truncate(15, True, '') }}</code>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-muted">الحالة</span>
+                        <span
+                            class="badge bg-{{ 'success' if project.status == 'active' else 'primary' if project.status == 'completed' else 'secondary' }}">
+                            {% if project.status == 'active' %}نشط{% elif project.status == 'completed' %}مكتمل{% else
+                            %}مخطط له{% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-muted">تاريخ الإنشاء</span>
+                        <span>{{ project.metadata.creation_date[:10] if project.metadata and
+                            project.metadata.creation_date else '-' }}</span>
+                    </div>
+                    {% if project.timeline %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-muted">تاريخ البدء</span>
+                        <span>{{ project.timeline.start_date if project.timeline.start_date else '-' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">تاريخ الانتهاء</span>
+                        <span>{{ project.timeline.end_date if project.timeline.end_date else '-' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Funding Info -->
+            {% if project.funding %}
+            <div class="card info-card">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-dollar-sign text-success me-2"></i> التمويل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if project.funding.amount or project.funding.total_budget %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">المبلغ</span>
+                        <span class="h5 mb-0 text-success">${{ "{:,.0f}".format(project.funding.amount or
+                            project.funding.total_budget) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if project.funding.source or project.funding.funding_agency %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">المصدر</span>
+                        <span>{{ project.funding.source or project.funding.funding_agency }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
