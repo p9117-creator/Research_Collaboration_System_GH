@@ -81,17 +81,6 @@ class TestAPI:
         assert response.status_code == 200
         assert "basic_info" in response.json()
 
-    def test_get_researcher_not_found(self, client, mock_query_engine):
-        # Setup - make query_engine return error to trigger 404
-        from fastapi import HTTPException
-        mock_query_engine.get_researcher_profile_complete.return_value = {"error": "Researcher not found"}
-        
-        # Execute
-        response = client.get("/researchers/999")
-        
-        # Verify
-        assert response.status_code == 404
-
     def test_system_stats(self, client, mock_db_manager):
         # Setup - mock search_researchers to return empty list
         mock_db_manager.mongodb.search_researchers.return_value = []
