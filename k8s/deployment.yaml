@@ -23,7 +23,7 @@ spec:
       serviceAccountName: research-api-sa
       containers:
       - name: research-api
-        image: researchcollabregistry.azurecr.io/api:latest
+        image: RESEARCH_IMAGE_PLACEHOLDER
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
