@@ -14,34 +14,20 @@ spec:
   selector:
     matchLabels:
       app: research-api
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   template:
     metadata:
       labels:
         app: research-api
         version: v1
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8000"
-        prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: research-api-sa
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        fsGroup: 1000
       containers:
       - name: research-api
-        image: research-collab/api:latest
+        image: researchcollabregistry.azurecr.io/api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
           name: http
-          protocol: TCP
         env:
         - name: MONGODB_URI
           valueFrom:
@@ -77,46 +63,18 @@ spec:
           value: "INFO"
         - name: ENVIRONMENT
           value: "production"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
           initialDelaySeconds: 10
           periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/config
-          readOnly: true
-      volumes:
-      - name: config-volume
-        configMap:
-          name: research-api-config
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app: research-api
-              topologyKey: kubernetes.io/hostname
 ---
 # Web Interface Deployment
 apiVersion: apps/v1
@@ -141,24 +99,40 @@ spec:
     spec:
       containers:
       - name: research-web
-        image: research-collab/web:latest
+        image: researchcollabregistry.azurecr.io/web:latest
+        command: ["python", "code/web_interface.py"]
         ports:
         - containerPort: 3000
         env:
         - name: API_URL
           value: "http://research-api:8000"
+        - name: WEB_PORT
+          value: "3000"
         - name: MONGODB_URI
           valueFrom:
             secretKeyRef:
               name: research-secrets
               key: mongodb-uri
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
+        - name: NEO4J_URI
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-uri
+        - name: NEO4J_USER
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-user
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: neo4j-password
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: research-secrets
+              key: redis-url
         livenessProbe:
           httpGet:
             path: /

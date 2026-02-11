@@ -1,0 +1,36 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-research_admin_2024}
+    volumes:
+      - DBStorage:/data/db
+
+  neo4j:
+    image: neo4j:5.15
+    environment:
+      NEO4J_AUTH: neo4j/research_neo4j_2024
+    volumes:
+      - DBStorage:/data
+
+  research-api:
+    image: ${DOCKER_USERNAME}/research-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URI: json://mongodb:27017/ # Standard internal network
+    depends_on:
+      - mongodb
+
+  research-web:
+    image: ${DOCKER_USERNAME}/research-web:latest
+    ports:
+      - "3000:3000"
+    command: python code/web_interface.py
+    depends_on:
+      - research-api
+
+volumes:
+  DBStorage:
+    external: true

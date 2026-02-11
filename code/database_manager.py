@@ -327,13 +327,13 @@ def load_database_config() -> Dict[str, str]:
         'MONGODB_URI': os.getenv('MONGODB_URI', 'mongodb://admin:research_admin_2024@mongodb:27017/research_collaboration?authSource=admin'),
         'MONGODB_DATABASE': os.getenv('MONGODB_DATABASE', 'research_collaboration'),
         
-        'NEO4J_URI': os.getenv('NEO4J_URI', 'bolt://localhost:7687'),
+        'NEO4J_URI': os.getenv('NEO4J_URI', 'bolt://neo4j:7687'),
         'NEO4J_USER': os.getenv('NEO4J_USER', 'neo4j'),
         'NEO4J_PASSWORD': os.getenv('NEO4J_PASSWORD', 'research_neo4j_2024'),
         
-        'REDIS_URL': os.getenv('REDIS_URL', 'redis://:research_redis_2024@localhost:6379'),
+        'REDIS_URL': os.getenv('REDIS_URL', 'redis://:research_redis_2024@redis:6379'),
         
-        'CASSANDRA_HOST': os.getenv('CASSANDRA_HOST', 'localhost'),
+        'CASSANDRA_HOST': os.getenv('CASSANDRA_HOST', 'cassandra'),
         'CASSANDRA_PORT': os.getenv('CASSANDRA_PORT', '9042')
     }
 
