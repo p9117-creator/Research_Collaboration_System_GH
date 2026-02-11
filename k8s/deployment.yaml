@@ -99,7 +99,7 @@ spec:
     spec:
       containers:
       - name: research-web
-        image: RESEARCH_WEB_IMAGE_PLACEHOLDER
+        image: RESEARCH_IMAGE_PLACEHOLDER
         command: ["python", "code/web_interface.py"]
         ports:
         - containerPort: 3000

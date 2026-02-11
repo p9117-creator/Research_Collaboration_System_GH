@@ -254,14 +254,10 @@ jobs:
         resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
         cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
 
-    - name: Replace Image Placeholders
-      run: |
-        # Use full image path with SHA tag for immutability
-        API_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
-        WEB_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+        # Use a single image build for both roles
+        IMAGE_PATH="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
         
-        sed -i "s|RESEARCH_API_IMAGE_PLACEHOLDER|$API_IMAGE|g" k8s/deployment.yaml
-        sed -i "s|RESEARCH_WEB_IMAGE_PLACEHOLDER|$WEB_IMAGE|g" k8s/deployment.yaml
+        sed -i "s|RESEARCH_IMAGE_PLACEHOLDER|$IMAGE_PATH|g" k8s/deployment.yaml
 
     - name: Deploy to AKS
       run: |
