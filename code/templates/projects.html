@@ -362,17 +362,27 @@
                 const piSelect = document.getElementById('pi_select');
                 const coPiSelect = document.getElementById('co_pi_select');
 
+                // Clear existing options except the first one (placeholder)
+                while (piSelect.options.length > 1) piSelect.remove(1);
+                if (coPiSelect) {
+                    while (coPiSelect.options.length > 0) coPiSelect.remove(0);
+                }
+
                 data.forEach(r => {
-                    const text = `${r.personal_info.first_name} ${r.personal_info.last_name} [${r.academic_profile.department_id}]`;
+                    const firstName = r.personal_info.first_name || '';
+                    const lastName = r.personal_info.last_name || '';
+                    const fullName = (firstName + ' ' + lastName).trim();
+                    const dept = (r.academic_profile && r.academic_profile.department_id) ? ` [${r.academic_profile.department_id}]` : '';
+                    const text = `${fullName}${dept}`;
 
                     const opt1 = document.createElement('option');
                     opt1.value = r._id;
-                    opt1.text = text;
+                    opt1.textContent = text;
                     piSelect.appendChild(opt1);
 
                     const opt2 = document.createElement('option');
                     opt2.value = r._id;
-                    opt2.text = text;
+                    opt2.textContent = text;
                     coPiSelect.appendChild(opt2);
                 });
             });

@@ -195,6 +195,13 @@
                                     placeholder="IEEE, Nature, Springer...">
                             </div>
                             <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">المشروع المرتبط (اختياري)</label>
+                                <select name="project_id" id="project_select"
+                                    class="form-select rounded-4 border-light bg-light py-2">
+                                    <option value="">لا يوجد مشروع مرتبط</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-primary">ربط المؤلفين
                                     المشاركين
                                     (اختيار من النظام)</label>
@@ -422,11 +429,25 @@
                 .then(response => response.json())
                 .then(data => {
                     const select = document.getElementById('author_select');
+                    select.innerHTML = ''; // Clear existing to prevent duplicates
                     data.forEach(r => {
                         const opt = document.createElement('option');
                         opt.value = r._id;
                         opt.className = "py-2 px-3 border-bottom border-light";
                         opt.text = `👤 ${r.personal_info.first_name} ${r.personal_info.last_name}`;
+                        select.appendChild(opt);
+                    });
+                });
+
+            // Fetch projects for the select dropdown
+            fetch('/api/projects/list')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('project_select');
+                    data.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.text = `📁 ${p.title}`;
                         select.appendChild(opt);
                     });
                 });

@@ -229,11 +229,35 @@ class ResearchDatabaseManager:
             return False
 
     def create_publication_comprehensive(self, publication_data: Dict) -> str:
-        """Create publication across databases"""
+        """Create publication across databases and update metrics/relationships"""
         try:
-            # Create in MongoDB
+            # 1. Create in MongoDB
             pub_id = self.mongodb.create_publication(publication_data)
-            # Future: Add to Cassandra via self.cassandra.insert_publication_metrics(...)
+            
+            # 2. Update author metrics in MongoDB
+            author_ids = [a.get('researcher_id') for a in publication_data.get('authors', []) if a.get('researcher_id')]
+            for author_id in author_ids:
+                try:
+                    researcher = self.mongodb.get_researcher(author_id)
+                    if researcher:
+                        new_count = researcher.get('collaboration_metrics', {}).get('total_publications', 0) + 1
+                        self.mongodb.update_researcher(author_id, {
+                            'collaboration_metrics.total_publications': new_count
+                        })
+                        # Invalidate cache
+                        self.redis.invalidate_researcher_cache(author_id)
+                except Exception as e:
+                    logger.warning(f"Failed to update researcher metrics for {author_id}: {e}")
+
+            # 3. Create collaboration relationships in Neo4j
+            if len(author_ids) > 1:
+                from itertools import combinations
+                for r1, r2 in combinations(author_ids, 2):
+                    try:
+                        self.neo4j.add_collaboration(r1, r2)
+                    except Exception as e:
+                        logger.warning(f"Failed to add Neo4j collaboration between {r1} and {r2}: {e}")
+            
             logger.info(f"Created comprehensive publication record: {pub_id}")
             return pub_id
         except Exception as e:

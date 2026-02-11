@@ -383,10 +383,12 @@ def add_researcher():
             flash('Database connections not available', 'error')
             return redirect(url_for('researchers'))
             
-        # Extract form data
-        name_parts = request.form.get('name', '').split(' ')
-        first_name = name_parts[0] if name_parts else ""
-        last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ""
+        first_name = request.form.get('name', '').strip()
+        last_name = ""
+        if ' ' in first_name:
+            parts = first_name.split(' ', 1)
+            first_name = parts[0]
+            last_name = parts[1]
         
         researcher_data = {
             "orcid_id": str(uuid.uuid4()), # Generate unique ID at root level
@@ -665,7 +667,9 @@ def projects():
                         try:
                             researcher = query_engine.db_manager.mongodb.get_researcher(pi.get('researcher_id'))
                             if researcher:
-                                pi['name'] = f"{researcher['personal_info']['first_name']} {researcher['personal_info']['last_name']}"
+                                f_name = researcher.get('personal_info', {}).get('first_name', '')
+                                l_name = researcher.get('personal_info', {}).get('last_name', '')
+                                pi['name'] = f"{f_name} {l_name}".strip()
                             else:
                                 pi['name'] = "غير معروف"
                         except:
@@ -782,7 +786,9 @@ def project_detail(project_id):
                     try:
                         researcher = query_engine.db_manager.mongodb.get_researcher(pi['researcher_id'])
                         if researcher:
-                            pi['name'] = f"{researcher['personal_info']['first_name']} {researcher['personal_info']['last_name']}"
+                            f_name = researcher.get('personal_info', {}).get('first_name', '')
+                            l_name = researcher.get('personal_info', {}).get('last_name', '')
+                            pi['name'] = f"{f_name} {l_name}".strip()
                         else:
                             pi['name'] = "غير معروف"
                     except:
@@ -795,7 +801,9 @@ def project_detail(project_id):
                     try:
                         researcher = query_engine.db_manager.mongodb.get_researcher(copi['researcher_id'])
                         if researcher:
-                            copi['name'] = f"{researcher['personal_info']['first_name']} {researcher['personal_info']['last_name']}"
+                            f_name = researcher.get('personal_info', {}).get('first_name', '')
+                            l_name = researcher.get('personal_info', {}).get('last_name', '')
+                            copi['name'] = f"{f_name} {l_name}".strip()
                         else:
                             copi['name'] = "غير معروف"
                     except:
@@ -935,6 +943,11 @@ def add_publication():
                 "author_order": i + 1,
                 "contribution": "author"
             })
+            
+        # Add project link if selected
+        project_id = request.form.get('project_id')
+        if project_id:
+            pub_data["related_projects"] = [project_id]
             
         query_engine.db_manager.create_publication_comprehensive(pub_data)
         flash('Publication added successfully!', 'success')
@@ -1215,6 +1228,29 @@ def cache_demo():
     except Exception as e:
         logger.error(f"Cache demo error: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/projects/list')
+def api_projects_list():
+    """API endpoint to get list of projects"""
+    try:
+        if not query_engine:
+            return jsonify({"error": "Database connections not available"}), 500
+            
+        projects = query_engine.db_manager.mongodb.find_documents("projects", {})
+        
+        # Simplify for dropdown
+        project_list = []
+        for p in projects:
+            project_list.append({
+                "id": str(p["_id"]),
+                "title": p.get("title", "No Title")
+            })
+            
+        return jsonify(project_list)
+    except Exception as e:
+        logger.error(f"API projects list error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/researchers/list')
 def api_researchers_list():
@@ -1954,14 +1990,56 @@ def activity_timeline():
                 collab_stats = db_manager.neo4j.get_collaboration_statistics()
                 stats['total_collaborations'] = collab_stats.get('total_collaborations', 0)
                 
-                # Count items as "created"
+                # Fetch recent items to build activities
+                researchers = db_manager.mongodb.find_documents('researchers', limit=10)
+                projects = db_manager.mongodb.find_documents('projects', limit=10)
+                publications = db_manager.mongodb.find_documents('publications', limit=10)
+                
                 stats['total_created'] = (
                     db_manager.mongodb.count_documents('researchers') +
                     db_manager.mongodb.count_documents('projects') +
                     db_manager.mongodb.count_documents('publications')
                 )
-            except:
-                pass
+                
+                # Convert to activity format
+                for r in researchers:
+                    activities.append({
+                        'action_type': 'create',
+                        'entity_type': 'researcher',
+                        'entity_id': str(r['_id']),
+                        'title': f"إضافة باحث جديد: {r.get('personal_info', {}).get('first_name', '')}",
+                        'description': f"تمت إضافة الباحث {r.get('personal_info', {}).get('first_name', '')} {r.get('personal_info', {}).get('last_name', '')} إلى النظام.",
+                        'timestamp': r.get('metadata', {}).get('created_at', datetime.now()),
+                        'user': 'النظام'
+                    })
+                
+                for p in projects:
+                    activities.append({
+                        'action_type': 'create',
+                        'entity_type': 'project',
+                        'entity_id': str(p['_id']),
+                        'title': "إضافة مشروع بحثي",
+                        'description': f"تم تسجيل المشروع الجديد: {p.get('title', '')}",
+                        'timestamp': p.get('metadata', {}).get('created_at', datetime.now()),
+                        'user': 'النظام'
+                    })
+                    
+                for pub in publications:
+                    activities.append({
+                        'action_type': 'create',
+                        'entity_type': 'publication',
+                        'entity_id': str(pub['_id']),
+                        'title': "منشور علمي جديد",
+                        'description': f"تم توثيق المنشور: {pub.get('title', '')}",
+                        'timestamp': pub.get('metadata', {}).get('created_at', datetime.now()),
+                        'user': 'النظام'
+                    })
+                
+                # Sort by timestamp
+                activities.sort(key=lambda x: x['timestamp'] if x['timestamp'] else datetime.min, reverse=True)
+                
+            except Exception as e:
+                logger.error(f"Timeline data error: {e}")
         
         return render_template('activity_timeline.html',
                              stats=stats,
