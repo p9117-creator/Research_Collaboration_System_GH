@@ -230,15 +230,15 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # ==================== DEPLOY TO STAGING ====================
-  deploy-staging:
-    name: Deploy to Staging
+  # ==================== DEPLOY TO PRODUCTION ====================
+  deploy-production:
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/main'
     environment:
-      name: staging
-      url: https://staging.research-collab.example.com
+      name: production
+      url: https://research-collab.example.com
 
     steps:
     - uses: actions/checkout@v4
@@ -254,14 +254,19 @@ jobs:
         resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
         cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
 
-    - name: Replace Image Placeholder
+    - name: Replace Image Placeholders
       run: |
-        sed -i "s|researchcollabregistry.azurecr.io|${{ secrets.ACR_LOGIN_SERVER }}|g" k8s/deployment.yaml
+        # Use full image path with SHA tag for immutability
+        API_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+        WEB_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+        
+        sed -i "s|RESEARCH_API_IMAGE_PLACEHOLDER|$API_IMAGE|g" k8s/deployment.yaml
+        sed -i "s|RESEARCH_WEB_IMAGE_PLACEHOLDER|$WEB_IMAGE|g" k8s/deployment.yaml
 
-    - name: Deploy to Staging
+    - name: Deploy to AKS
       run: |
-        echo "Deploying to staging environment..."
-        kubectl apply -f k8s/ --namespace=staging
+        echo "Deploying to research-system namespace..."
+        kubectl apply -f k8s/ --namespace=research-system
 
   # ==================== DEPLOY TO PRODUCTION ====================
   deploy-production:

@@ -99,7 +99,7 @@ spec:
     spec:
       containers:
       - name: research-web
-        image: researchcollabregistry.azurecr.io/web:latest
+        image: RESEARCH_WEB_IMAGE_PLACEHOLDER
         command: ["python", "code/web_interface.py"]
         ports:
         - containerPort: 3000
