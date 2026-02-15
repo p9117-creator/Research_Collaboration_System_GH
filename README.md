@@ -18,3 +18,4 @@ if ! echo "$COMMIT_MSG" | grep -Eq "^RCS-[0-9]+"; then
   echo ""
   exit 1
 fi
+docker-compose up --build -d
